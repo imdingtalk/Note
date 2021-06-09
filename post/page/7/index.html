@@ -1,9 +1,382 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><link href=dingtalk.pub/post/index.xml rel=alternate type=application/rss+xml title=snoopy><link href=dingtalk.pub/post/index.xml rel=feed type=application/rss+xml title=snoopy><meta property="og:title" content="Posts"><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="dingtalk.pub/post/"><meta itemprop=name content="Posts"><meta itemprop=description content><meta name=twitter:card content="summary"><meta name=twitter:title content="Posts"><meta name=twitter:description content></head><body class="ma0 avenir bg-near-white"><header><div class="pb3-m pb6-l bg-black"><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav><div class="tc-l pv3 ph3 ph4-ns"><h1 class="f2 f-subheadline-l fw2 light-silver mb0 lh-title">Posts</h1></div></div></header><main class=pb7 role=main><article class="pa3 pa4-ns nested-copy-line-height nested-img"><section class="cf ph3 ph5-l pv3 pv4-l f4 tc-l center measure-wide lh-copy mid-gray"></section><aside class="flex-ns flex-wrap justify-around mt5"><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 24, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1585713/ class="link black dim">MySQL基于GTID复制的实践</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">介绍 GTID(Global Transaction ID)是MySQL5.6引入的功能，可以在集群全局范围标识事务，用于取代过去通过binlog文件偏移量定位复制位置的传统方式。借助GTID，在发生主备切换的情况下，MySQL的其它Slave可以自动在新主上找到正确的复制位置，这大大简化了复杂复制拓扑下集群的维护，也减少了人为设置复制位置发生误操作的风险。另外，基于GTID的复制可以忽略已经执行过的事务,减少了数据发生不一致的风险。 配置 enforce_gtid_consistency = ON gtid_mode = ON server_id = 9910 binlog_format = row 同时主备库都开启binlog如果不设置级联从库，从库不要设置log_slave_updates参数。这是最合理的设置。建立复制用户 #新版本中建立用户和授权需要分开执行 create user 'hh'@'%' identified by 'hh'; grant all on *.* to 'hh'@'%'; 导出主库数据
-mysqldump -uroot -proot -h127.0.0.1 --single-transaction --master-data=2 -R -E --triggers --all-databases > test.sql 在从库source备份，然后使用MASTER_AUTO_POSITION建立同步 change master to master_host='xxx', master_user='repl', master_password='repl', master_port=3306, MASTER_AUTO_POSITION = 1; **启动slave ** start slave 如何修复复制错误 在基于GTID的复制拓扑中，要想修复Slave的SQL线程错误，过去的SQL_SLAVE_SKIP_COUNTER方式不再适用。需要通过设置gtid_next或gtid_purged完成，当然前提是已经确保主从数据一致，仅仅需要跳过复制错误让复制继续下去。比如下面的场景： 在从库上创建表tb1 mysql> set sql_log_bin=0; Query OK, 0 rows affected (0.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 15, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1539024/ class="link black dim">基于kubeadm搭建的etcd集群的运维实践</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景  kubeadm提供了两种高可用方案，用户搭建k8s的高可用环境，详细对比可参考： Options for Highly Available Topology 堆叠的etcd拓扑 特点：
-etcd节点和apiserver以及scheduler，controller-manager共存，需要较小的服务器资源  如果node出现问题，那么master节点和etcd节点都将下线 这是kubeadm中的默认拓扑。使用kubeadm init和kubeadm join时使用 experimental-control-plane 作为master 加入集群时候，在控制平面节点上自动创建本地etcd成员 外部etcd集群 特点：
-需要额外的服务器搭建etcd集群，相对于堆叠型拓扑，需要双倍的服务器节点 etcd节点和master分离，不像堆叠型拓扑，master或者etcd节点宕机影响更小 常用命令 #etcd需要在etcd的pod内执行 kubectl exec -it -n kube-system etcd-kube-node1 sh #查看集群成员 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list #健康检查 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ --endpoints=https://ip1:2379,https://ip2:2379,\ https://ip3:2379 \ endpoint health #删除成员 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member remove [member ID] #添加一个值 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 13, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1530580/ class="link black dim">快速批量删除pod</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景  因为宿主机资源关系，产生了较多被驱逐的pod，如果不清除，将会一直显示，即使pod已经被重新调度 如何删除 #删除默认ns下的被驱逐的pod kubectl get pods | grep Evicted | awk '{print $1}' | xargs kubectl delete pod #删除指定空间下被驱逐的pod kubectl get pods -n kube-system | grep Evicted | awk '{print $1}' | xargs kubectl delete pod -n kube-system</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 9, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1483686/ class="link black dim">Valine出现Code 403 访问被api域名白名单拒绝，请检查你的安全域名设置</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景 前期把hexo的静态页面部署在GH,Valine所有功能正常，但是在部署到Netlif，在自定义的域名开启https之后，Valine出现报错 Code 403: 访问被api域名白名单拒绝，请检查你的安全域名设置 解决 在leancloud的应用>设置>安全中心>Web安全域名中只添加了新的自定义的域名即可解决该问题，</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 7, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1480766/ class="link black dim">centos7安装shadowsocks客户端全局代理</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">前言  最近使用一个开源的项目，在安装依赖的时候，使用的是composer，使用国内的源的情况下，部分依赖，国内的镜像站没有，于是直接使用官方的源。开始之前，取消所有的设置的非官方源 composer config -g --unset repos.packagist 安装  高级加密算法支持  #下载 libsodium 最新版本 wget https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz tar xzvf libsodium-1.0.17.tar.gz cd libsodium #编译并且安装 make -j8 && make install #添加运行库位置并加载运行库 echo /usr/local/lib > /etc/ld.so.conf.d/usr_local_lib.conf ldconfig ss客户端  安装最新的ss客户端 使用以下命令安装最新的客户端（不要仅仅简单的使用 pip install shadowsocks 来安装，因为不支持一些高级加密算法） pip install --upgrade pip pip install https://github.com/shadowsocks/shadowsocks/archive/master.zip -U 配置  vim /etc/shadowsocks.json ##以下配置根据自己的服务器信息填写 { "server":"x.x.x.x", #你的 ss 服务器 ip "server_port":0, #你的 ss 服务器端口 "local_address": "127.0.0.1", #本地ip "local_port":1080, #本地端口 "password":"password", #连接 ss 密码 "timeout":300, #等待超时 "method":"aes-256-cfb", #加密方式 "workers": 1 #工作线程数 } 启动 nohup sslocal -c /etc/shadowsocks.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>April 2, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1442397/ class="link black dim">CircleCI+GitHub+hexo 持续集成</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景 前期使用Travis做持续集成，Travis针对开源的项目是没有使用限制的，但是你休想使用一个私有项目区构建你的应用(更新：可以build私有项目，不过有个总限制，用完了，就真的没法了)，搜寻之下，暂时准备用CircleCI替代，补充Travis在私有项目中的个人用途。价格参考 &ndash; 单容器单job每月1000分钟build时间，不区分私有还是开源项目。一个hexo的build，每次大概只耗时1分钟。单次build时长限制60min(Travis是50min) 快速开始 这里，直接使用github账户登录。 然后授权要进行ci的repo. 在授权项目根目录新建CircleCI的文件夹 #注意不要少了 . mkdir .circleci vim .circleci/config.yml 示例配置如下：
-version: 2 jobs: build: branches: only: - master docker: - image: circleci/node:10 #免费类型的，只能使用一个容器 steps: - checkout # checkout把gh的项目检出，详细参见：https://circleci.com/docs/2.0/configuration-reference/#checkout - run: command: |sed -i "s/GH_TOKEN/${GH_TOKEN}/g" ./_config.yml git config --global user.name $GH_USER git config --global user.email $GH_EMAIL sudo npm install hexo-generator-searchdb --save sudo npm install hexo-wordcount --save sudo npm install --save hexo-blog-encrypt sudo npm install -g hexo-cli sudo npm install hexo-deployer-git --save sudo npm i -g yuque-hexo sudo npm install sudo yuque-hexo sync sudo hexo clean sudo hexo generate sudo hexo deploy 以上做好之后，在gh这里有新的push的时候，CircleCI便会自动构建项目了，同时部署你的hexo网站 后面争取做到在语雀编辑好文章的时候触发自动build</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>March 31, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1135305/ class="link black dim">GitHub+Travis CI+hexo构建个人博客</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">参考文档:Hexo 博客终极玩法：云端写作，自动部署使用Hexo+Github+TravisCI搭建自动发布的静态博客系统Hexo遇上Travis-CI：可能是最通俗易懂的自动发布博客图文教程
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>My New Hugo Site</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="">
+    <meta name="generator" content="Hugo 0.83.1" />
+    
+    
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+    
+
+    
+
+  
+  
+    <link rel="stylesheet" href="/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css" >
+  
+
+
+
+
+    
+      
+
+    
+
+    
+    
+      <link href="/post/index.xml" rel="alternate" type="application/rss+xml" title="My New Hugo Site" />
+      <link href="/post/index.xml" rel="feed" type="application/rss+xml" title="My New Hugo Site" />
+      
+    
+    
+    <meta property="og:title" content="Posts" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://example.org/post/" />
+
+<meta itemprop="name" content="Posts">
+<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Posts"/>
+<meta name="twitter:description" content=""/>
+
+	
+  </head>
+
+  <body class="ma0 avenir bg-near-white">
+
+    
+
+  <header>
+    <div class="pb3-m pb6-l bg-black">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="/" class="f3 fw2 hover-white no-underline white-90 dib">
+      
+        My New Hugo Site
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv3 ph3 ph4-ns">
+        <h1 class="f2 f-subheadline-l fw2 light-silver mb0 lh-title">
+          Posts
+        </h1>
+        
+      </div>
+    </div>
+  </header>
+
+
+    <main class="pb7" role="main">
+      
+
+  <article class="pa3 pa4-ns nested-copy-line-height nested-img">
+    <section class="cf ph3 ph5-l pv3 pv4-l f4 tc-l center measure-wide lh-copy mid-gray">
+      
+    </section>
+    <aside class="flex-ns flex-wrap justify-around mt5">
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 24, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1585713/" class="link black dim">
+        MySQL基于GTID复制的实践
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      介绍 GTID(Global Transaction ID)是MySQL5.6引入的功能，可以在集群全局范围标识事务，用于取代过去通过binlog文件偏移量定位复制位置的传统方式。借助GTID，在发生主备切换的情况下，MySQL的其它Slave可以自动在新主上找到正确的复制位置，这大大简化了复杂复制拓扑下集群的维护，也减少了人为设置复制位置发生误操作的风险。另外，基于GTID的复制可以忽略已经执行过的事务,减少了数据发生不一致的风险。 配置 enforce_gtid_consistency = ON gtid_mode = ON server_id = 9910 binlog_format = row 同时主备库都开启binlog如果不设置级联从库，从库不要设置log_slave_updates参数。这是最合理的设置。建立复制用户 #新版本中建立用户和授权需要分开执行 create user &#39;hh&#39;@&#39;%&#39; identified by &#39;hh&#39;; grant all on *.* to &#39;hh&#39;@&#39;%&#39;; 导出主库数据
+mysqldump -uroot -proot -h127.0.0.1 --single-transaction --master-data=2 -R -E --triggers --all-databases &gt; test.sql 在从库source备份，然后使用MASTER_AUTO_POSITION建立同步 change master to master_host=&#39;xxx&#39;, master_user=&#39;repl&#39;, master_password=&#39;repl&#39;, master_port=3306, MASTER_AUTO_POSITION = 1; **启动slave ** start slave 如何修复复制错误 在基于GTID的复制拓扑中，要想修复Slave的SQL线程错误，过去的SQL_SLAVE_SKIP_COUNTER方式不再适用。需要通过设置gtid_next或gtid_purged完成，当然前提是已经确保主从数据一致，仅仅需要跳过复制错误让复制继续下去。比如下面的场景： 在从库上创建表tb1 mysql&gt; set sql_log_bin=0; Query OK, 0 rows affected (0.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 15, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1539024/" class="link black dim">
+        基于kubeadm搭建的etcd集群的运维实践
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景  kubeadm提供了两种高可用方案，用户搭建k8s的高可用环境，详细对比可参考： Options for Highly Available Topology 堆叠的etcd拓扑 特点：
+ etcd节点和apiserver以及scheduler，controller-manager共存，需要较小的服务器资源  如果node出现问题，那么master节点和etcd节点都将下线 这是kubeadm中的默认拓扑。使用kubeadm init和kubeadm join时使用 experimental-control-plane 作为master 加入集群时候，在控制平面节点上自动创建本地etcd成员  外部etcd集群 特点：
+ 需要额外的服务器搭建etcd集群，相对于堆叠型拓扑，需要双倍的服务器节点 etcd节点和master分离，不像堆叠型拓扑，master或者etcd节点宕机影响更小   常用命令 #etcd需要在etcd的pod内执行 kubectl exec -it -n kube-system etcd-kube-node1 sh #查看集群成员 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list #健康检查 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ --endpoints=https://ip1:2379,https://ip2:2379,\ https://ip3:2379 \ endpoint health #删除成员 ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member remove [member ID] #添加一个值  ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 13, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1530580/" class="link black dim">
+        快速批量删除pod
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景  因为宿主机资源关系，产生了较多被驱逐的pod，如果不清除，将会一直显示，即使pod已经被重新调度 如何删除 #删除默认ns下的被驱逐的pod kubectl get pods | grep Evicted | awk &#39;{print $1}&#39; | xargs kubectl delete pod #删除指定空间下被驱逐的pod kubectl get pods -n kube-system | grep Evicted | awk &#39;{print $1}&#39; | xargs kubectl delete pod -n kube-system 
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 9, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1483686/" class="link black dim">
+        Valine出现Code 403 访问被api域名白名单拒绝，请检查你的安全域名设置
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景 前期把hexo的静态页面部署在GH,Valine所有功能正常，但是在部署到Netlif，在自定义的域名开启https之后，Valine出现报错 Code 403: 访问被api域名白名单拒绝，请检查你的安全域名设置 解决 在leancloud的应用&gt;设置&gt;安全中心&gt;Web安全域名中只添加了新的自定义的域名即可解决该问题，
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 7, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1480766/" class="link black dim">
+        centos7安装shadowsocks客户端全局代理
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      前言  最近使用一个开源的项目，在安装依赖的时候，使用的是composer，使用国内的源的情况下，部分依赖，国内的镜像站没有，于是直接使用官方的源。开始之前，取消所有的设置的非官方源 composer config -g --unset repos.packagist 安装  高级加密算法支持  #下载 libsodium 最新版本 wget https://github.com/jedisct1/libsodium/releases/download/1.0.17/libsodium-1.0.17.tar.gz tar xzvf libsodium-1.0.17.tar.gz cd libsodium #编译并且安装 make -j8 &amp;&amp; make install #添加运行库位置并加载运行库 echo /usr/local/lib &gt; /etc/ld.so.conf.d/usr_local_lib.conf ldconfig ss客户端  安装最新的ss客户端 使用以下命令安装最新的客户端（不要仅仅简单的使用 pip install shadowsocks 来安装，因为不支持一些高级加密算法） pip install --upgrade pip pip install https://github.com/shadowsocks/shadowsocks/archive/master.zip -U 配置  vim /etc/shadowsocks.json ##以下配置根据自己的服务器信息填写 { &#34;server&#34;:&#34;x.x.x.x&#34;, #你的 ss 服务器 ip &#34;server_port&#34;:0, #你的 ss 服务器端口 &#34;local_address&#34;: &#34;127.0.0.1&#34;, #本地ip &#34;local_port&#34;:1080, #本地端口 &#34;password&#34;:&#34;password&#34;, #连接 ss 密码 &#34;timeout&#34;:300, #等待超时 &#34;method&#34;:&#34;aes-256-cfb&#34;, #加密方式 &#34;workers&#34;: 1 #工作线程数 } 启动 nohup sslocal -c /etc/shadowsocks.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        April 2, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1442397/" class="link black dim">
+        CircleCI&#43;GitHub&#43;hexo 持续集成
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景 前期使用Travis做持续集成，Travis针对开源的项目是没有使用限制的，但是你休想使用一个私有项目区构建你的应用(更新：可以build私有项目，不过有个总限制，用完了，就真的没法了)，搜寻之下，暂时准备用CircleCI替代，补充Travis在私有项目中的个人用途。价格参考 &ndash; 单容器单job每月1000分钟build时间，不区分私有还是开源项目。一个hexo的build，每次大概只耗时1分钟。单次build时长限制60min(Travis是50min) 快速开始 这里，直接使用github账户登录。 然后授权要进行ci的repo. 在授权项目根目录新建CircleCI的文件夹 #注意不要少了 . mkdir .circleci vim .circleci/config.yml 示例配置如下：
+version: 2 jobs: build: branches: only: - master docker: - image: circleci/node:10 #免费类型的，只能使用一个容器 steps: - checkout # checkout把gh的项目检出，详细参见：https://circleci.com/docs/2.0/configuration-reference/#checkout - run: command: |sed -i &#34;s/GH_TOKEN/${GH_TOKEN}/g&#34; ./_config.yml git config --global user.name $GH_USER git config --global user.email $GH_EMAIL sudo npm install hexo-generator-searchdb --save sudo npm install hexo-wordcount --save sudo npm install --save hexo-blog-encrypt sudo npm install -g hexo-cli sudo npm install hexo-deployer-git --save sudo npm i -g yuque-hexo sudo npm install sudo yuque-hexo sync sudo hexo clean sudo hexo generate sudo hexo deploy 以上做好之后，在gh这里有新的push的时候，CircleCI便会自动构建项目了，同时部署你的hexo网站 后面争取做到在语雀编辑好文章的时候触发自动build
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        March 31, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1135305/" class="link black dim">
+        GitHub&#43;Travis CI&#43;hexo构建个人博客
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      参考文档:Hexo 博客终极玩法：云端写作，自动部署使用Hexo+Github+TravisCI搭建自动发布的静态博客系统Hexo遇上Travis-CI：可能是最通俗易懂的自动发布博客图文教程
 基本参考以上的文章做了完整的一套，此处不再赘诉，以下说下几个坑的地方：
-要使用 https://imdingtalk.github.io/ 这种以自己的用户GitHub用户名做域名（不用这种的话，可以使用自己的域名）的话，必须使用master分支做为展示页面。前面教程基本都是用master分支来做hexo源码存放路径的。搞得我后来把仓库名改成 &lt;username>.github.io 之后，自动构建了半天结果页面还是404 。查看设置页面才知道有这坑，但是我前面已经将源码目录和生成后的页面分别放在了master和gh-pages，Google半天也不知道怎么搜索去切换master和gh-pages，自己摸索了下，抱着试一试的心态把远程仓库全部删除了。重新传了下代码解决。仅供参考 做以下操作前，需要先关闭travis-ci的自动构建，避免push了删除的操作后，触发构建，导致代码混乱# 从远端下载最新的代码,进入代码目录 git clone xxx.git cd xxx # 切换到主分支并备份主分支 git checkout master mkdir ../master \cp -rf * ../master # 切换到gh-pages分支并备份该分支 git checkout gh-pages mkdir ../ghpages \cp -rf * ../ghpages # 目录备份完成，直接删除远程仓库代码 git rm -rf * git commit -m "delete gh-pages" git push origin gh-pages git checkout master git rm -rf * git commit -m "delete master" git push origin master # 以上就删除了远端目录，接下来把备份的gh-pages推到master，备份的master推送到gh-pages # change master to gh-pages cd .</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>March 19, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1391857/ class="link black dim">k8s 共享内存的实现</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景  Docker默认共享内存是64M，并且可以通过docker run --shm-size进行修改，Oracle的镜像在docker运行时候可以通过 &ndash;shm-size 指定共享内存的大小，在k8s中没有这个参数可以使用 解决  在k8s中，没有参数可以直接指定变量，只能通过变通的方式实现，查看k8s卷的说明，emptyDir支持Memory，可以将该emptyDir.medium字段设置"Memory" 告诉Kubernetes安装tmpfs（RAM支持的文件系统）,配合deploy，可以实现在pod使用共享内存超出限制的时候驱逐pod
-containers: - volumeMounts: - mountPath: /dev/shm name: dshm volumes: - name: dshm emptyDir: medium: Memory sizeLimit: "300Mi" 测试 部署一个deploy->生成超出限制的请求->观察pod的events kubectl apply -f deploy.yaml kubectl get pod -o wide # 查看pod所在节点 kubectl exec -it xxxpod bash # 进入容器生成文件 dd if=/dev/zero of=/dev/sdb bs=1300M count=1 参考: Volumes</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>February 25, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1290093/ class="link black dim">pod 一直terminating 状态的处理</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">使用kubectl delete pod xxx后查看pod状态一直处于terminating 状态，使用kubectl delete pod --grace-period=0 --force可以强制删除pod，但是k8s不会检测是否pod真的被终止了，可能pod会无限期的在集群中运行</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>February 11, 2019</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1231675/ class="link black dim">vps 端口被墙的解决办法</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景  自用的vps突然连接不上外网了
-排查 检查vps，ping检测:端口检测： 推荐： http://port.ping.pe/可见，vps对应的端口在国内被封禁，此种办法一般修改一个端口即可 解决 在sspanel后台管理处修改对应用户的端口，重启ss服务端再次检测：所有访问点，端口正常通信。</div></div></div></aside><ul class=pagination><li class=page-item><a href=dingtalk.pub/post/ class=page-link aria-label=First><span aria-hidden=true>&#171;&#171;</span></a></li><li class=page-item><a href=dingtalk.pub/post/page/6/ class=page-link aria-label=Previous><span aria-hidden=true>&#171;</span></a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/>1</a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/2/>2</a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/3/>3</a></li><li class="page-item disabled"><span aria-hidden=true>&nbsp;&mldr;&nbsp;</span></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/6/>6</a></li><li class="page-item active"><a class=page-link href=dingtalk.pub/post/page/7/>7</a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/8/>8</a></li><li class=page-item><a href=dingtalk.pub/post/page/8/ class=page-link aria-label=Next><span aria-hidden=true>&#187;</span></a></li><li class=page-item><a href=dingtalk.pub/post/page/8/ class=page-link aria-label=Last><span aria-hidden=true>&#187;&#187;</span></a></li></ul></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>
+ 要使用 https://imdingtalk.github.io/ 这种以自己的用户GitHub用户名做域名（不用这种的话，可以使用自己的域名）的话，必须使用master分支做为展示页面。前面教程基本都是用master分支来做hexo源码存放路径的。搞得我后来把仓库名改成 &lt;username&gt;.github.io 之后，自动构建了半天结果页面还是404 。查看设置页面才知道有这坑，但是我前面已经将源码目录和生成后的页面分别放在了master和gh-pages，Google半天也不知道怎么搜索去切换master和gh-pages，自己摸索了下，抱着试一试的心态把远程仓库全部删除了。重新传了下代码解决。仅供参考  做以下操作前，需要先关闭travis-ci的自动构建，避免push了删除的操作后，触发构建，导致代码混乱# 从远端下载最新的代码,进入代码目录 git clone xxx.git cd xxx # 切换到主分支并备份主分支 git checkout master mkdir ../master \cp -rf * ../master # 切换到gh-pages分支并备份该分支 git checkout gh-pages mkdir ../ghpages \cp -rf * ../ghpages # 目录备份完成，直接删除远程仓库代码 git rm -rf * git commit -m &#34;delete gh-pages&#34; git push origin gh-pages git checkout master git rm -rf * git commit -m &#34;delete master&#34; git push origin master # 以上就删除了远端目录，接下来把备份的gh-pages推到master，备份的master推送到gh-pages # change master to gh-pages cd .
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        March 19, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1391857/" class="link black dim">
+        k8s  共享内存的实现
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景  Docker默认共享内存是64M，并且可以通过docker run --shm-size进行修改，Oracle的镜像在docker运行时候可以通过 &ndash;shm-size 指定共享内存的大小，在k8s中没有这个参数可以使用 解决  在k8s中，没有参数可以直接指定变量，只能通过变通的方式实现，查看k8s卷的说明，emptyDir支持Memory，可以将该emptyDir.medium字段设置&quot;Memory&quot; 告诉Kubernetes安装tmpfs（RAM支持的文件系统）,配合deploy，可以实现在pod使用共享内存超出限制的时候驱逐pod
+containers: - volumeMounts: - mountPath: /dev/shm name: dshm volumes: - name: dshm emptyDir: medium: Memory sizeLimit: &#34;300Mi&#34; 测试 部署一个deploy-&gt;生成超出限制的请求-&gt;观察pod的events kubectl apply -f deploy.yaml kubectl get pod -o wide # 查看pod所在节点 kubectl exec -it xxxpod bash # 进入容器生成文件 dd if=/dev/zero of=/dev/sdb bs=1300M count=1 参考: Volumes
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        February 25, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1290093/" class="link black dim">
+        pod 一直terminating 状态的处理
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      使用kubectl delete pod xxx后查看pod状态一直处于terminating 状态，使用kubectl delete pod --grace-period=0 --force可以强制删除pod，但是k8s不会检测是否pod真的被终止了，可能pod会无限期的在集群中运行
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        February 11, 2019
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1231675/" class="link black dim">
+        vps 端口被墙的解决办法
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景  自用的vps突然连接不上外网了
+排查 检查vps，ping检测:端口检测： 推荐： http://port.ping.pe/可见，vps对应的端口在国内被封禁，此种办法一般修改一个端口即可 解决 在sspanel后台管理处修改对应用户的端口，重启ss服务端再次检测：所有访问点，端口正常通信。
+    </div>
+  </div>
+
+        </div>
+      
+    </aside>
+    
+<ul class="pagination">
+  <li class="page-item">
+    <a href="/post/" class="page-link" aria-label="First"><span aria-hidden="true">&laquo;&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/post/page/6/" class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/">1</a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/2/">2</a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/3/">3</a>
+  </li>
+  <li class="page-item disabled">
+    <span aria-hidden="true">&nbsp;&hellip;&nbsp;</span>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/6/">6</a>
+  </li>
+  <li class="page-item active">
+    <a class="page-link" href="/post/page/7/">7</a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/8/">8</a>
+  </li>
+  <li class="page-item">
+    <a href="/post/page/8/" class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/post/page/8/" class="page-link" aria-label="Last"><span aria-hidden="true">&raquo;&raquo;</span></a>
+  </li>
+</ul>
+
+
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="http://example.org/" >
+    &copy;  My New Hugo Site 2021 
+  </a>
+    <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+  </div>
+</footer>
+
+  </body>
+</html>

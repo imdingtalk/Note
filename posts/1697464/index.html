@@ -1,0 +1,198 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>kubeadm安装的集群的备份和恢复实践 | snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content="说明 本文档简述了Kubernetes主节点灾备恢复的相关步骤，供在发生k8s master崩溃时操作 **环境：**kubeadm安装的k8s 1.14.1 实践 查看集群的成员和现存的key
+ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ get / --prefix --keys-only 备份的实现和恢复 etcd集群数据备份，这里我写了一个脚本实现
+#!/bin/bash #脚本需要依赖etcdctl，安装 yum install etcd #获取脚本所存放目录 cd `dirname $0` bash_path=`pwd` #脚本名 me=$(basename $0) # delete dir and keep days delete_dirs=(&#34;/data/backup/kubernetes:7&#34;) backup_dir=/data/backup/kubernetes files_dir=(&#34;/etc/kubernetes&#34; &#34;/var/lib/kubelet&#34;) log_dir=$backup_dir/log shell_log=$log_dir/${USER}_${me}.log ssh_port=&#34;22&#34; ssh_parameters=&#34;-o StrictHostKeyChecking=no -o ConnectTimeout=60&#34; ssh_command=&#34;ssh ${ssh_parameters}-p ${ssh_port}&#34; scp_command=&#34;scp ${ssh_parameters}-P ${ssh_port}&#34; DATE=$(date +%F) TIME=$(date '+%Y%m%d%H') BACK_SERVER=&#34;127."><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><meta property="og:title" content="kubeadm安装的集群的备份和恢复实践"><meta property="og:description" content="说明 本文档简述了Kubernetes主节点灾备恢复的相关步骤，供在发生k8s master崩溃时操作 **环境：**kubeadm安装的k8s 1.14.1 实践 查看集群的成员和现存的key
+ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ get / --prefix --keys-only 备份的实现和恢复 etcd集群数据备份，这里我写了一个脚本实现
+#!/bin/bash #脚本需要依赖etcdctl，安装 yum install etcd #获取脚本所存放目录 cd `dirname $0` bash_path=`pwd` #脚本名 me=$(basename $0) # delete dir and keep days delete_dirs=(&#34;/data/backup/kubernetes:7&#34;) backup_dir=/data/backup/kubernetes files_dir=(&#34;/etc/kubernetes&#34; &#34;/var/lib/kubelet&#34;) log_dir=$backup_dir/log shell_log=$log_dir/${USER}_${me}.log ssh_port=&#34;22&#34; ssh_parameters=&#34;-o StrictHostKeyChecking=no -o ConnectTimeout=60&#34; ssh_command=&#34;ssh ${ssh_parameters}-p ${ssh_port}&#34; scp_command=&#34;scp ${ssh_parameters}-P ${ssh_port}&#34; DATE=$(date +%F) TIME=$(date '+%Y%m%d%H') BACK_SERVER=&#34;127."><meta property="og:type" content="article"><meta property="og:url" content="dingtalk.pub/posts/1697464/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2019-05-16T03:36:18+00:00"><meta property="article:modified_time" content="2019-05-16T03:36:18+00:00"><meta itemprop=name content="kubeadm安装的集群的备份和恢复实践"><meta itemprop=description content="说明 本文档简述了Kubernetes主节点灾备恢复的相关步骤，供在发生k8s master崩溃时操作 **环境：**kubeadm安装的k8s 1.14.1 实践 查看集群的成员和现存的key
+ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ get / --prefix --keys-only 备份的实现和恢复 etcd集群数据备份，这里我写了一个脚本实现
+#!/bin/bash #脚本需要依赖etcdctl，安装 yum install etcd #获取脚本所存放目录 cd `dirname $0` bash_path=`pwd` #脚本名 me=$(basename $0) # delete dir and keep days delete_dirs=(&#34;/data/backup/kubernetes:7&#34;) backup_dir=/data/backup/kubernetes files_dir=(&#34;/etc/kubernetes&#34; &#34;/var/lib/kubelet&#34;) log_dir=$backup_dir/log shell_log=$log_dir/${USER}_${me}.log ssh_port=&#34;22&#34; ssh_parameters=&#34;-o StrictHostKeyChecking=no -o ConnectTimeout=60&#34; ssh_command=&#34;ssh ${ssh_parameters}-p ${ssh_port}&#34; scp_command=&#34;scp ${ssh_parameters}-P ${ssh_port}&#34; DATE=$(date +%F) TIME=$(date '+%Y%m%d%H') BACK_SERVER=&#34;127."><meta itemprop=datePublished content="2019-05-16T03:36:18+00:00"><meta itemprop=dateModified content="2019-05-16T03:36:18+00:00"><meta itemprop=wordCount content="511"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="kubeadm安装的集群的备份和恢复实践"><meta name=twitter:description content="说明 本文档简述了Kubernetes主节点灾备恢复的相关步骤，供在发生k8s master崩溃时操作 **环境：**kubeadm安装的k8s 1.14.1 实践 查看集群的成员和现存的key
+ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ member list ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt \ --cert=/etc/kubernetes/pki/etcd/peer.crt \ --key=/etc/kubernetes/pki/etcd/peer.key \ get / --prefix --keys-only 备份的实现和恢复 etcd集群数据备份，这里我写了一个脚本实现
+#!/bin/bash #脚本需要依赖etcdctl，安装 yum install etcd #获取脚本所存放目录 cd `dirname $0` bash_path=`pwd` #脚本名 me=$(basename $0) # delete dir and keep days delete_dirs=(&#34;/data/backup/kubernetes:7&#34;) backup_dir=/data/backup/kubernetes files_dir=(&#34;/etc/kubernetes&#34; &#34;/var/lib/kubelet&#34;) log_dir=$backup_dir/log shell_log=$log_dir/${USER}_${me}.log ssh_port=&#34;22&#34; ssh_parameters=&#34;-o StrictHostKeyChecking=no -o ConnectTimeout=60&#34; ssh_command=&#34;ssh ${ssh_parameters}-p ${ssh_port}&#34; scp_command=&#34;scp ${ssh_parameters}-P ${ssh_port}&#34; DATE=$(date +%F) TIME=$(date '+%Y%m%d%H') BACK_SERVER=&#34;127."></head><body class="ma0 avenir bg-near-white"><header><div class=bg-black><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav></div></header><main class=pb7 role=main><article class="flex-l flex-wrap justify-between mw8 center ph3"><header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked">POSTS</aside><div id=sharing class=mt3><a href="https://www.facebook.com/sharer.php?u=dingtalk.pub/dingtalk.pub/posts/1697464/" class="facebook no-underline" aria-label="share on Facebook"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765 50.32h6.744V33.998h4.499l.596-5.624h-5.095l.007-2.816c0-1.466.14-2.253 2.244-2.253h2.812V17.68h-4.5c-5.405.0-7.307 2.729-7.307 7.317v3.377h-3.369v5.625h3.369V50.32zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd"/></svg></a><a href="https://twitter.com/share?url=dingtalk.pub/dingtalk.pub/posts/1697464/&text=kubeadm%e5%ae%89%e8%a3%85%e7%9a%84%e9%9b%86%e7%be%a4%e7%9a%84%e5%a4%87%e4%bb%bd%e5%92%8c%e6%81%a2%e5%a4%8d%e5%ae%9e%e8%b7%b5" class="twitter no-underline" aria-label="share on Twitter"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167 22.283c-2.619.953-4.274 3.411-4.086 6.101l.063 1.038-1.048-.127c-3.813-.487-7.145-2.139-9.974-4.915l-1.383-1.377-.356 1.017c-.754 2.267-.272 4.661 1.299 6.271.838.89.649 1.017-.796.487-.503-.169-.943-.296-.985-.233-.146.149.356 2.076.754 2.839.545 1.06 1.655 2.097 2.871 2.712l1.027.487-1.215.021c-1.173.0-1.215.021-1.089.467.419 1.377 2.074 2.839 3.918 3.475l1.299.444-1.131.678c-1.676.976-3.646 1.526-5.616 1.568C19.775 43.256 19 43.341 19 43.405c0 .211 2.557 1.397 4.044 1.864 4.463 1.377 9.765.783 13.746-1.568 2.829-1.673 5.657-5 6.978-8.221.713-1.716 1.425-4.851 1.425-6.354.0-.975.063-1.102 1.236-2.267.692-.678 1.341-1.419 1.467-1.631.21-.403.188-.403-.88-.043-1.781.636-2.033.551-1.152-.402.649-.678 1.425-1.907 1.425-2.267.0-.063-.314.042-.671.233-.377.212-1.215.53-1.844.72l-1.131.361-1.027-.7c-.566-.381-1.361-.805-1.781-.932C39.766 21.902 38.131 21.944 37.167 22.283zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a><a href="https://www.linkedin.com/shareArticle?mini=true&url=dingtalk.pub/dingtalk.pub/posts/1697464/&title=kubeadm%e5%ae%89%e8%a3%85%e7%9a%84%e9%9b%86%e7%be%a4%e7%9a%84%e5%a4%87%e4%bb%bd%e5%92%8c%e6%81%a2%e5%a4%8d%e5%ae%9e%e8%b7%b5" class="linkedin no-underline" aria-label="share on LinkedIn"><svg height="32" style="enable-background:new 0 0 65 65" viewBox="0 0 65 65" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M50.837 48.137V36.425c0-6.275-3.35-9.195-7.816-9.195-3.604.0-5.219 1.983-6.119 3.374V27.71h-6.79c.09 1.917.0 20.427.0 20.427h6.79V36.729c0-.609.044-1.219.224-1.655.49-1.22 1.607-2.483 3.482-2.483 2.458.0 3.44 1.873 3.44 4.618v10.929H50.837zM22.959 24.922c2.367.0 3.842-1.57 3.842-3.531-.044-2.003-1.475-3.528-3.797-3.528s-3.841 1.524-3.841 3.528c0 1.961 1.474 3.531 3.753 3.531H22.959zM34 64C17.432 64 4 50.568 4 34 4 17.431 17.432 4 34 4s30 13.431 30 30c0 16.568-13.432 30-30 30zM26.354 48.137V27.71h-6.789v20.427h6.789z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a></div><h1 class="f1 athelas mt3 mb1">kubeadm安装的集群的备份和恢复实践</h1><time class="f6 mv4 dib tracked" datetime=2019-05-16T03:36:18Z>May 16, 2019</time></header><div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p></p><h2 id=说明>说明</h2><p>本文档简述了Kubernetes主节点灾备恢复的相关步骤，供在发生k8s master崩溃时操作 **环境：**kubeadm安装的k8s  1.14.1</p><h2 id=实践>实践</h2><p>查看集群的成员和现存的key</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>ETCDCTL_API<span style=color:#f92672>=</span><span style=color:#ae81ff>3</span> etcdctl --cacert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/ca.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>--cert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/peer.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>--key<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/peer.key <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>member list
+ETCDCTL_API<span style=color:#f92672>=</span><span style=color:#ae81ff>3</span> etcdctl --cacert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/ca.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>--cert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/peer.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>--key<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/peer.key <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>get / --prefix --keys-only 
+</code></pre></div><p></p><h3 id=备份的实现和恢复>备份的实现和恢复</h3><p>etcd集群数据备份，这里我写了一个脚本实现</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#75715e>#!/bin/bash
+</span><span style=color:#75715e></span><span style=color:#75715e>#脚本需要依赖etcdctl，安装  yum install etcd</span>
+<span style=color:#75715e>#获取脚本所存放目录</span>
+cd <span style=color:#e6db74>`</span>dirname $0<span style=color:#e6db74>`</span>
+bash_path<span style=color:#f92672>=</span><span style=color:#e6db74>`</span>pwd<span style=color:#e6db74>`</span>
+
+<span style=color:#75715e>#脚本名</span>
+me<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>basename $0<span style=color:#66d9ef>)</span>
+<span style=color:#75715e># delete dir and keep days</span>
+delete_dirs<span style=color:#f92672>=(</span><span style=color:#e6db74>&#34;/data/backup/kubernetes:7&#34;</span><span style=color:#f92672>)</span>
+backup_dir<span style=color:#f92672>=</span>/data/backup/kubernetes
+files_dir<span style=color:#f92672>=(</span><span style=color:#e6db74>&#34;/etc/kubernetes&#34;</span> <span style=color:#e6db74>&#34;/var/lib/kubelet&#34;</span><span style=color:#f92672>)</span>
+log_dir<span style=color:#f92672>=</span>$backup_dir/log
+shell_log<span style=color:#f92672>=</span>$log_dir/<span style=color:#e6db74>${</span>USER<span style=color:#e6db74>}</span>_<span style=color:#e6db74>${</span>me<span style=color:#e6db74>}</span>.log
+ssh_port<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;22&#34;</span>
+ssh_parameters<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;-o StrictHostKeyChecking=no -o ConnectTimeout=60&#34;</span>
+ssh_command<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;ssh </span><span style=color:#e6db74>${</span>ssh_parameters<span style=color:#e6db74>}</span><span style=color:#e6db74> -p </span><span style=color:#e6db74>${</span>ssh_port<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>
+scp_command<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;scp </span><span style=color:#e6db74>${</span>ssh_parameters<span style=color:#e6db74>}</span><span style=color:#e6db74> -P </span><span style=color:#e6db74>${</span>ssh_port<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>
+DATE<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>date +%F<span style=color:#66d9ef>)</span>
+TIME<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>date <span style=color:#e6db74>&#39;+%Y%m%d%H&#39;</span><span style=color:#66d9ef>)</span>
+
+BACK_SERVER<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;127.0.0.1&#34;</span>  <span style=color:#75715e># 远程备份服务器IP</span>
+BACK_SERVER_BASE_DIR<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;/data/backup&#34;</span>
+BACK_SERVER_DIR<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$BACK_SERVER_BASE_DIR<span style=color:#e6db74>/kubernetes/</span><span style=color:#e6db74>${</span>HOSTNAME<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>  <span style=color:#75715e># 远程备份服务器目录</span>
+BACK_SERVER_LOG_DIR<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$BACK_SERVER_BASE_DIR<span style=color:#e6db74>/kubernetes/logs&#34;</span>
+<span style=color:#75715e>#恢复时设置，将host和name顺序对应</span>
+HOSTS<span style=color:#f92672>=(</span><span style=color:#e6db74>&#34;127.0.0.1&#34;</span><span style=color:#f92672>)</span>
+NAME<span style=color:#f92672>=(</span><span style=color:#e6db74>&#34;node1&#34;</span><span style=color:#f92672>)</span>
+
+
+<span style=color:#75715e>#定义保存日志函数</span>
+<span style=color:#66d9ef>function</span> save_log <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    echo -e <span style=color:#e6db74>&#34;`date +%F\ %T` </span>$*<span style=color:#e6db74>&#34;</span> &gt;&gt; $shell_log
+<span style=color:#f92672>}</span>
+
+save_log <span style=color:#e6db74>&#34;start backup etcd&#34;</span>
+<span style=color:#75715e>#确认日志目录</span>
+<span style=color:#f92672>[</span> ! -d $log_dir <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> mkdir -p $log_dir
+<span style=color:#75715e>#定义输出颜色函数</span>
+<span style=color:#66d9ef>function</span> red_echo <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+<span style=color:#75715e>#用法:  red_echo &#34;内容&#34;</span>
+    local what<span style=color:#f92672>=</span>$*
+    echo -e <span style=color:#e6db74>&#34;\e[1;31m </span><span style=color:#e6db74>${</span>what<span style=color:#e6db74>}</span><span style=color:#e6db74> \e[0m&#34;</span>
+<span style=color:#f92672>}</span>
+
+<span style=color:#66d9ef>function</span> green_echo <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+<span style=color:#75715e>#用法:  green_echo &#34;内容&#34;</span>
+    local what<span style=color:#f92672>=</span>$*
+    echo -e <span style=color:#e6db74>&#34;\e[1;32m </span><span style=color:#e6db74>${</span>what<span style=color:#e6db74>}</span><span style=color:#e6db74> \e[0m&#34;</span>
+<span style=color:#f92672>}</span>
+
+<span style=color:#66d9ef>function</span> yellow_echo <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+<span style=color:#75715e>#用法:  yellow_echo &#34;内容&#34;</span>
+    local what<span style=color:#f92672>=</span>$*
+    echo -e <span style=color:#e6db74>&#34;\e[1;33m </span><span style=color:#e6db74>${</span>what<span style=color:#e6db74>}</span><span style=color:#e6db74> \e[0m&#34;</span>
+<span style=color:#f92672>}</span>
+
+<span style=color:#75715e>#备份函数</span>
+<span style=color:#66d9ef>function</span> backup <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>for</span> f_d in <span style=color:#e6db74>${</span>files_dir[@]<span style=color:#e6db74>}</span>; <span style=color:#66d9ef>do</span>
+        f_name<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>basename <span style=color:#e6db74>${</span>f_d<span style=color:#e6db74>}</span><span style=color:#66d9ef>)</span>
+        d_name<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>dirname $f_d<span style=color:#66d9ef>)</span>
+        cd $d_name
+        tar -cjf <span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span>.tar.bz $f_name
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> $? -eq <span style=color:#ae81ff>0</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+            file_size<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>du <span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span>.tar.bz|awk <span style=color:#e6db74>&#39;{print $1}&#39;</span><span style=color:#66d9ef>)</span>
+            save_log <span style=color:#e6db74>&#34;</span>$file_size<span style=color:#e6db74> </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+            save_log <span style=color:#e6db74>&#34;finish tar </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+        <span style=color:#66d9ef>else</span>
+            file_size<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>
+            save_log <span style=color:#e6db74>&#34;failed tar </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+        <span style=color:#66d9ef>fi</span>
+        rsync -avzP <span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span>.tar.bz  $backup_dir/<span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-<span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span>.tar.bz
+        rm -f <span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span>.tar.bz
+    <span style=color:#66d9ef>done</span>
+    
+    export ETCDCTL_API<span style=color:#f92672>=</span><span style=color:#ae81ff>3</span>
+    etcdctl --cert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/server.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>        --key<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/server.key <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>        --cacert<span style=color:#f92672>=</span>/etc/kubernetes/pki/etcd/ca.crt <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>        snapshot save $backup_dir/<span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-k8s-snapshot.db
+    cd $backup_dir
+    tar -cjf <span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-k8s-snapshot.tar.bz <span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-k8s-snapshot.db 
+    <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> $? -eq <span style=color:#ae81ff>0</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+        file_size<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>du <span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-k8s-snapshot.tar.bz|awk <span style=color:#e6db74>&#39;{print $1}&#39;</span><span style=color:#66d9ef>)</span>
+        save_log <span style=color:#e6db74>&#34;</span>$file_size<span style=color:#e6db74> </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+        save_log <span style=color:#e6db74>&#34;finish tar </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+    <span style=color:#66d9ef>else</span>
+        file_size<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>
+        save_log <span style=color:#e6db74>&#34;failed tar </span><span style=color:#e6db74>${</span>f_name<span style=color:#e6db74>}</span><span style=color:#e6db74>.tar.bz&#34;</span>
+    <span style=color:#66d9ef>fi</span>
+    rm -f <span style=color:#e6db74>${</span>TIME<span style=color:#e6db74>}</span>-k8s-snapshot.db
+<span style=color:#f92672>}</span>
+
+<span style=color:#66d9ef>function</span> rsync_backup_files <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e># 传输日志文件</span>
+    <span style=color:#75715e>#传输到远程服务器备份, 需要配置免密ssh认证</span>
+    $ssh_command root@<span style=color:#e6db74>${</span>BACK_SERVER<span style=color:#e6db74>}</span> <span style=color:#e6db74>&#34;mkdir -p </span><span style=color:#e6db74>${</span>BACK_SERVER_DIR<span style=color:#e6db74>}</span><span style=color:#e6db74>/</span><span style=color:#e6db74>${</span>DATE<span style=color:#e6db74>}</span><span style=color:#e6db74>/&#34;</span>
+    rsync -avz --bwlimit<span style=color:#f92672>=</span><span style=color:#ae81ff>5000</span> -e <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>ssh_command<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> $backup_dir/*.bz <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>    root@<span style=color:#e6db74>${</span>BACK_SERVER<span style=color:#e6db74>}</span>:<span style=color:#e6db74>${</span>BACK_SERVER_DIR<span style=color:#e6db74>}</span>/<span style=color:#e6db74>${</span>DATE<span style=color:#e6db74>}</span>/
+    <span style=color:#f92672>[</span> $? -eq <span style=color:#ae81ff>0</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> save_log <span style=color:#e6db74>&#34;success rsync&#34;</span> <span style=color:#f92672>||</span> <span style=color:#ae81ff>\
+</span><span style=color:#ae81ff></span>      save_log <span style=color:#e6db74>&#34;failed rsync&#34;</span>
+<span style=color:#f92672>}</span>
+
+<span style=color:#66d9ef>function</span> delete_old_files <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>for</span> delete_dir_keep_days in <span style=color:#e6db74>${</span>delete_dirs[@]<span style=color:#e6db74>}</span>; <span style=color:#66d9ef>do</span>
+        delete_dir<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>echo $delete_dir_keep_days|awk -F<span style=color:#e6db74>&#39;:&#39;</span> <span style=color:#e6db74>&#39;{print $1}&#39;</span><span style=color:#66d9ef>)</span>
+        keep_days<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>echo $delete_dir_keep_days|awk -F<span style=color:#e6db74>&#39;:&#39;</span> <span style=color:#e6db74>&#39;{print $2}&#39;</span><span style=color:#66d9ef>)</span>
+        <span style=color:#f92672>[</span> -n <span style=color:#e6db74>&#34;</span>$delete_dir<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> cd <span style=color:#e6db74>${</span>delete_dir<span style=color:#e6db74>}</span>
+        <span style=color:#f92672>[</span> $? -eq <span style=color:#ae81ff>0</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> find -L <span style=color:#e6db74>${</span>delete_dir<span style=color:#e6db74>}</span> -mindepth <span style=color:#ae81ff>1</span> -mtime +$keep_days -exec rm -rf <span style=color:#f92672>{}</span> <span style=color:#ae81ff>\;</span>
+    <span style=color:#66d9ef>done</span>
+<span style=color:#f92672>}</span>
+<span style=color:#75715e>#恢复引导说明</span>
+<span style=color:#66d9ef>function</span> restore_backup<span style=color:#f92672>(){</span>
+    len<span style=color:#f92672>=</span><span style=color:#e6db74>${#</span>HOSTS[@]<span style=color:#e6db74>}</span>
+    <span style=color:#66d9ef>for</span><span style=color:#f92672>((</span>i<span style=color:#f92672>=</span>0;i&lt;<span style=color:#e6db74>${</span>len<span style=color:#e6db74>}</span>;i++<span style=color:#f92672>))</span>;
+    <span style=color:#66d9ef>do</span>
+        initial<span style=color:#f92672>=</span><span style=color:#e6db74>${</span>initial<span style=color:#e6db74>}</span>,<span style=color:#e6db74>${</span>NAME[i]<span style=color:#e6db74>}</span><span style=color:#f92672>=</span>https://<span style=color:#e6db74>${</span>HOSTS[i]<span style=color:#e6db74>}</span>:2380
+    <span style=color:#66d9ef>done</span> 
+    initial<span style=color:#f92672>=</span><span style=color:#e6db74>`</span>echo <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>initial<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>|sed -r <span style=color:#e6db74>&#39;s/^,//g&#39;</span><span style=color:#e6db74>`</span>
+    <span style=color:#75715e>#echo &#34;${initial}&#34;</span>
+    <span style=color:#75715e>#恢复的准备工作</span>
+    red_echo <span style=color:#e6db74>&#39;为了确保恢复成功，请手动依次执行以下命令&#39;</span>
+    red_echo  <span style=color:#e6db74>&#39;首先需要分别停掉Master机器的kube-apiserver，所有master执行以下命令,确保kube-apiserver已经停止&#39;</span>
+    yellow_echo <span style=color:#e6db74>&#39;mv /etc/kubernetes/manifests /etc/kubernetes/manifests.bak&#39;</span>
+    yellow_echo  <span style=color:#e6db74>&#39;docker ps | grep  -E &#34;k8s_kube-apiserver|k8s_etcd|k8s_kube-controller|k8s_kube-scheduler&#34;| wc -l&#39;</span>
+    red_echo    <span style=color:#e6db74>&#39;备份原etcd目录&#39;</span>
+    yellow_echo <span style=color:#e6db74>&#39;mv /var/lib/etcd /var/lib/etcd.bak&#39;</span>
+    red_echo    <span style=color:#e6db74>&#39;etcd集群用同一份snapshot恢复&#39;</span>
+    green_echo  <span style=color:#e6db74>&#39;本地已经存在的备份如下：&#39;</span>
+    ls $backup_dir | grep <span style=color:#e6db74>&#34;snapshot&#34;</span>
+    read -p <span style=color:#e6db74>&#34;选择要恢复的备份(xxx.tar.bz)：&#34;</span> snapshot
+    cd /tmp
+    dbfile<span style=color:#f92672>=</span><span style=color:#e6db74>`</span>tar -jxvf $backup_dir/$snapshot<span style=color:#e6db74>`</span>
+    green_echo <span style=color:#e6db74>&#39;即将恢复的备份为： &#39;</span>$dbfile<span style=color:#e6db74>&#39;&#39;</span>
+    <span style=color:#66d9ef>for</span>  host in <span style=color:#e6db74>${</span>HOSTS[@]<span style=color:#e6db74>}</span>; <span style=color:#66d9ef>do</span>
+        <span style=color:#75715e>#准备恢复文件</span>
+        green_echo <span style=color:#e6db74>&#34;开始发送备份文件到 </span><span style=color:#e6db74>${</span>host<span style=color:#e6db74>}</span><span style=color:#e6db74>上&#34;</span>
+        rsync -avz /tmp/$dbfile $host:/tmp/
+        green_echo <span style=color:#e6db74>&#34;在 </span><span style=color:#e6db74>${</span>host<span style=color:#e6db74>}</span><span style=color:#e6db74>上执行&#34;</span>
+        <span style=color:#75715e>#打印需要手动执行的命令</span>
+        yellow_echo <span style=color:#e6db74>&#39;  cd /tmp/
+</span><span style=color:#e6db74>    export ETCDCTL_API=3
+</span><span style=color:#e6db74>    &#39;</span>etcdctl snapshot restore $dbfile<span style=color:#e6db74>&#39; \
+</span><span style=color:#e6db74>    &#39;</span>--endpoints<span style=color:#f92672>=</span><span style=color:#e6db74>${</span>host<span style=color:#e6db74>}</span>:2379<span style=color:#e6db74>&#39; \
+</span><span style=color:#e6db74>    --name=$HOSTNAME \
+</span><span style=color:#e6db74>    --cert=/etc/kubernetes/pki/etcd/server.crt \
+</span><span style=color:#e6db74>    --key=/etc/kubernetes/pki/etcd/server.key \
+</span><span style=color:#e6db74>    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+</span><span style=color:#e6db74>    &#39;</span>--initial-advertise-peer-urls<span style=color:#f92672>=</span>https://<span style=color:#e6db74>${</span>host<span style=color:#e6db74>}</span>:2380<span style=color:#e6db74>&#39; \
+</span><span style=color:#e6db74>    --initial-cluster-token=etcd-cluster-0 \
+</span><span style=color:#e6db74>    --initial-cluster=&#39;</span><span style=color:#e6db74>${</span>initial<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39; \
+</span><span style=color:#e6db74>    --data-dir=/var/lib/etcd&#39;</span> 
+    <span style=color:#66d9ef>done</span>  
+    red_echo <span style=color:#e6db74>&#39;全部恢复完成后，所有Master机器恢复manifests&#39;</span>  
+    yellow_echo <span style=color:#e6db74>&#39;mv /etc/kubernetes/manifests.bak /etc/kubernetes/manifests&#39;</span>
+
+<span style=color:#f92672>}</span>
+
+<span style=color:#75715e>#backup</span>
+<span style=color:#75715e>#delete_old_files</span>
+<span style=color:#75715e>#远程备份</span>
+<span style=color:#75715e>#rsync_backup_files</span>
+<span style=color:#75715e>#数据恢复</span>
+<span style=color:#75715e>#restore_backup</span>
+echo_help<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+red_echo  <span style=color:#e6db74>&#34;  </span><span style=color:#66d9ef>$(</span>basename $0<span style=color:#66d9ef>)</span><span style=color:#e6db74>:&#34;</span>
+    red_echo  <span style=color:#e6db74>&#34;b|backup:          创建备份&#34;</span>
+    red_echo  <span style=color:#e6db74>&#34;r|restore:         恢复备份&#34;</span>
+<span style=color:#f92672>}</span>
+
+<span style=color:#f92672>[</span> -z <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>ACTION<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> ACTION<span style=color:#f92672>=</span>$1
+<span style=color:#66d9ef>case</span> <span style=color:#e6db74>${</span>ACTION<span style=color:#e6db74>}</span> in
+    <span style=color:#e6db74>&#39;b&#39;</span>|<span style=color:#e6db74>&#39;backup&#39;</span><span style=color:#f92672>){</span> backup; <span style=color:#f92672>}</span>;;
+    <span style=color:#e6db74>&#39;r&#39;</span>|<span style=color:#e6db74>&#39;retore&#39;</span><span style=color:#f92672>){</span> restore_backup; <span style=color:#f92672>}</span>;;
+    *<span style=color:#f92672>){</span> echo_help; <span style=color:#f92672>}</span>;;
+<span style=color:#66d9ef>esac</span>
+save_log <span style=color:#e6db74>&#34;finish </span>$0<span style=color:#e6db74>\n&#34;</span>
+
+exit <span style=color:#ae81ff>0</span>
+
+</code></pre></div><p></p><h2 id=小结>小结</h2><p>一般来说，如果master节点需要备份恢复，那除了误操作和删除，很可能就是整个机器已出现了故障，因此需要进行etcd数据的恢复，而在恢复时，有个前提条件，就是在待恢复的机器上，机器名称和ip地址需要与崩溃前的master节点配置完全一样，因为这个配置是写进了etcd数据存储当中的。</p><h3 id=主节点数据备份> 主节点数据备份</h3><ol><li>/etc/kubernetes/目录下的所有文件(证书，manifest文件)</li><li>用户主目录下.kube/config文件(kubectl连接认证)</li><li>/var/lib/kubelet/目录下所有文件(plugins容器连接认证)</li></ol><h3 id=主节点组件恢复>主节点组件恢复</h3><ol><li>按之前的安装脚本进行全新安装(kubeadm reset，iptables –X…)</li><li>停止系统服务systemctl stop kubelet.service。</li><li>删除相关插件容器(coredns,flannel,dashboard)。</li><li>恢复etcd数据(参见第一章节操作)。</li><li>将之前备份的三个目录依次还原。</li><li>重启系统服务systemctl start kubelet.service。</li><li>一杯咖啡，稍等片刻，待所有组件启动成功后进行验证。</li></ol><p>参考：<a href=https://yq.aliyun.com/articles/561894>Kubernetes Master节点 灾备恢复操作指南</a></p><ul class=pa0></ul><div class="mt6 instapaper_ignoref"></div></div><aside class="w-30-l mt6-l"></aside></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>

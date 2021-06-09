@@ -1,153 +1,309 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>部署 GlusterFS 存储服务端 | snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><meta property="og:title" content="部署 GlusterFS 存储服务端"><meta property="og:description" content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."><meta property="og:type" content="article"><meta property="og:url" content="dingtalk.pub/post/5928345/"><meta property="article:section" content="post"><meta property="article:published_time" content="2020-08-04T07:48:34+00:00"><meta property="article:modified_time" content="2020-08-04T07:48:34+00:00"><meta itemprop=name content="部署 GlusterFS 存储服务端"><meta itemprop=description content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."><meta itemprop=datePublished content="2020-08-04T07:48:34+00:00"><meta itemprop=dateModified content="2020-08-04T07:48:34+00:00"><meta itemprop=wordCount content="630"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="部署 GlusterFS 存储服务端"><meta name=twitter:description content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."></head><body class="ma0 avenir bg-near-white"><header><div class=bg-black><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav></div></header><main class=pb7 role=main><article class="flex-l flex-wrap justify-between mw8 center ph3"><header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked">POSTS</aside><div id=sharing class=mt3><a href="https://www.facebook.com/sharer.php?u=dingtalk.pub/dingtalk.pub/post/5928345/" class="facebook no-underline" aria-label="share on Facebook"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765 50.32h6.744V33.998h4.499l.596-5.624h-5.095l.007-2.816c0-1.466.14-2.253 2.244-2.253h2.812V17.68h-4.5c-5.405.0-7.307 2.729-7.307 7.317v3.377h-3.369v5.625h3.369V50.32zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd"/></svg></a><a href="https://twitter.com/share?url=dingtalk.pub/dingtalk.pub/post/5928345/&text=%e9%83%a8%e7%bd%b2%20GlusterFS%20%e5%ad%98%e5%82%a8%e6%9c%8d%e5%8a%a1%e7%ab%af" class="twitter no-underline" aria-label="share on Twitter"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167 22.283c-2.619.953-4.274 3.411-4.086 6.101l.063 1.038-1.048-.127c-3.813-.487-7.145-2.139-9.974-4.915l-1.383-1.377-.356 1.017c-.754 2.267-.272 4.661 1.299 6.271.838.89.649 1.017-.796.487-.503-.169-.943-.296-.985-.233-.146.149.356 2.076.754 2.839.545 1.06 1.655 2.097 2.871 2.712l1.027.487-1.215.021c-1.173.0-1.215.021-1.089.467.419 1.377 2.074 2.839 3.918 3.475l1.299.444-1.131.678c-1.676.976-3.646 1.526-5.616 1.568C19.775 43.256 19 43.341 19 43.405c0 .211 2.557 1.397 4.044 1.864 4.463 1.377 9.765.783 13.746-1.568 2.829-1.673 5.657-5 6.978-8.221.713-1.716 1.425-4.851 1.425-6.354.0-.975.063-1.102 1.236-2.267.692-.678 1.341-1.419 1.467-1.631.21-.403.188-.403-.88-.043-1.781.636-2.033.551-1.152-.402.649-.678 1.425-1.907 1.425-2.267.0-.063-.314.042-.671.233-.377.212-1.215.53-1.844.72l-1.131.361-1.027-.7c-.566-.381-1.361-.805-1.781-.932C39.766 21.902 38.131 21.944 37.167 22.283zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a><a href="https://www.linkedin.com/shareArticle?mini=true&url=dingtalk.pub/dingtalk.pub/post/5928345/&title=%e9%83%a8%e7%bd%b2%20GlusterFS%20%e5%ad%98%e5%82%a8%e6%9c%8d%e5%8a%a1%e7%ab%af" class="linkedin no-underline" aria-label="share on LinkedIn"><svg height="32" style="enable-background:new 0 0 65 65" viewBox="0 0 65 65" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M50.837 48.137V36.425c0-6.275-3.35-9.195-7.816-9.195-3.604.0-5.219 1.983-6.119 3.374V27.71h-6.79c.09 1.917.0 20.427.0 20.427h6.79V36.729c0-.609.044-1.219.224-1.655.49-1.22 1.607-2.483 3.482-2.483 2.458.0 3.44 1.873 3.44 4.618v10.929H50.837zM22.959 24.922c2.367.0 3.842-1.57 3.842-3.531-.044-2.003-1.475-3.528-3.797-3.528s-3.841 1.524-3.841 3.528c0 1.961 1.474 3.531 3.753 3.531H22.959zM34 64C17.432 64 4 50.568 4 34 4 17.431 17.432 4 34 4s30 13.431 30 30c0 16.568-13.432 30-30 30zM26.354 48.137V27.71h-6.789v20.427h6.789z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a></div><h1 class="f1 athelas mt3 mb1">部署 GlusterFS 存储服务端</h1><time class="f6 mv4 dib tracked" datetime=2020-08-04T07:48:34Z>August 4, 2020</time></header><div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p></p><h2 id=介绍>介绍</h2><p><a href=https://www.gluster.org/>GlusterFS</a> 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 <a href=https://docs.gluster.org/en/latest/Install-Guide/Install/#for-ubuntu>GlusterFS 官方网站</a>，搭建 Heketi 请参考 <a href=https://github.com/heketi/heketi/blob/master/docs/admin/readme.md>官方文档</a>。</p><p></p><h2 id=安装>安装</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell> <span style=color:#75715e>#安装源</span>
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>部署 GlusterFS 存储服务端 | My New Hugo Site</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi.">
+    <meta name="generator" content="Hugo 0.83.1" />
+    
+    
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+    
+
+    
+
+  
+  
+    <link rel="stylesheet" href="/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css" >
+  
+
+
+
+
+    
+      
+
+    
+
+    
+    
+    <meta property="og:title" content="部署 GlusterFS 存储服务端" />
+<meta property="og:description" content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/post/5928345/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2020-08-04T07:48:34&#43;00:00" />
+<meta property="article:modified_time" content="2020-08-04T07:48:34&#43;00:00" />
+
+<meta itemprop="name" content="部署 GlusterFS 存储服务端">
+<meta itemprop="description" content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."><meta itemprop="datePublished" content="2020-08-04T07:48:34&#43;00:00" />
+<meta itemprop="dateModified" content="2020-08-04T07:48:34&#43;00:00" />
+<meta itemprop="wordCount" content="630">
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="部署 GlusterFS 存储服务端"/>
+<meta name="twitter:description" content="介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi."/>
+
+	
+  </head>
+
+  <body class="ma0 avenir bg-near-white">
+
+    
+   
+  
+
+  <header>
+    <div class="bg-black">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="/" class="f3 fw2 hover-white no-underline white-90 dib">
+      
+        My New Hugo Site
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+</nav>
+
+    </div>
+  </header>
+
+
+
+    <main class="pb7" role="main">
+      
+  
+  <article class="flex-l flex-wrap justify-between mw8 center ph3">
+    <header class="mt4 w-100">
+      <aside class="instapaper_ignoref b helvetica tracked">
+          
+        POSTS
+      </aside>
+      
+
+
+
+
+  <div id="sharing" class="mt3">
+
+    
+    <a href="https://www.facebook.com/sharer.php?u=http://example.org/post/5928345/" class="facebook no-underline" aria-label="share on Facebook">
+      <svg height="32px"  style="enable-background:new 0 0 67 67;" version="1.1" viewBox="0 0 67 67" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765,50.32h6.744V33.998h4.499l0.596-5.624h-5.095  l0.007-2.816c0-1.466,0.14-2.253,2.244-2.253h2.812V17.68h-4.5c-5.405,0-7.307,2.729-7.307,7.317v3.377h-3.369v5.625h3.369V50.32z   M33,64C16.432,64,3,50.569,3,34S16.432,4,33,4s30,13.431,30,30S49.568,64,33,64z" style="fill-rule:evenodd;clip-rule:evenodd;"/></svg>
+
+    </a>
+
+    
+    
+    <a href="https://twitter.com/share?url=http://example.org/post/5928345/&amp;text=%e9%83%a8%e7%bd%b2%20GlusterFS%20%e5%ad%98%e5%82%a8%e6%9c%8d%e5%8a%a1%e7%ab%af" class="twitter no-underline" aria-label="share on Twitter">
+      <svg height="32px"  style="enable-background:new 0 0 67 67;" version="1.1" viewBox="0 0 67 67" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167,22.283c-2.619,0.953-4.274,3.411-4.086,6.101  l0.063,1.038l-1.048-0.127c-3.813-0.487-7.145-2.139-9.974-4.915l-1.383-1.377l-0.356,1.017c-0.754,2.267-0.272,4.661,1.299,6.271  c0.838,0.89,0.649,1.017-0.796,0.487c-0.503-0.169-0.943-0.296-0.985-0.233c-0.146,0.149,0.356,2.076,0.754,2.839  c0.545,1.06,1.655,2.097,2.871,2.712l1.027,0.487l-1.215,0.021c-1.173,0-1.215,0.021-1.089,0.467  c0.419,1.377,2.074,2.839,3.918,3.475l1.299,0.444l-1.131,0.678c-1.676,0.976-3.646,1.526-5.616,1.568  C19.775,43.256,19,43.341,19,43.405c0,0.211,2.557,1.397,4.044,1.864c4.463,1.377,9.765,0.783,13.746-1.568  c2.829-1.673,5.657-5,6.978-8.221c0.713-1.716,1.425-4.851,1.425-6.354c0-0.975,0.063-1.102,1.236-2.267  c0.692-0.678,1.341-1.419,1.467-1.631c0.21-0.403,0.188-0.403-0.88-0.043c-1.781,0.636-2.033,0.551-1.152-0.402  c0.649-0.678,1.425-1.907,1.425-2.267c0-0.063-0.314,0.042-0.671,0.233c-0.377,0.212-1.215,0.53-1.844,0.72l-1.131,0.361l-1.027-0.7  c-0.566-0.381-1.361-0.805-1.781-0.932C39.766,21.902,38.131,21.944,37.167,22.283z M33,64C16.432,64,3,50.569,3,34S16.432,4,33,4  s30,13.431,30,30S49.568,64,33,64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:;"/></svg>
+
+    </a>
+
+    
+    <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http://example.org/post/5928345/&amp;title=%e9%83%a8%e7%bd%b2%20GlusterFS%20%e5%ad%98%e5%82%a8%e6%9c%8d%e5%8a%a1%e7%ab%af" class="linkedin no-underline" aria-label="share on LinkedIn">
+      <svg  height="32px"  style="enable-background:new 0 0 65 65;" version="1.1" viewBox="0 0 65 65" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <path d="M50.837,48.137V36.425c0-6.275-3.35-9.195-7.816-9.195  c-3.604,0-5.219,1.983-6.119,3.374V27.71h-6.79c0.09,1.917,0,20.427,0,20.427h6.79V36.729c0-0.609,0.044-1.219,0.224-1.655  c0.49-1.22,1.607-2.483,3.482-2.483c2.458,0,3.44,1.873,3.44,4.618v10.929H50.837z M22.959,24.922c2.367,0,3.842-1.57,3.842-3.531  c-0.044-2.003-1.475-3.528-3.797-3.528s-3.841,1.524-3.841,3.528c0,1.961,1.474,3.531,3.753,3.531H22.959z M34,64  C17.432,64,4,50.568,4,34C4,17.431,17.432,4,34,4s30,13.431,30,30C64,50.568,50.568,64,34,64z M26.354,48.137V27.71h-6.789v20.427  H26.354z" style="fill-rule:evenodd;clip-rule:evenodd;fill:;"/>
+</svg>
+
+    </a>
+  </div>
+
+
+      <h1 class="f1 athelas mt3 mb1">部署 GlusterFS 存储服务端</h1>
+      
+      
+      <time class="f6 mv4 dib tracked" datetime="2020-08-04T07:48:34Z">August 4, 2020</time>
+
+      
+      
+    </header>
+    <div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="介绍">介绍</h2>
+<p><a href="https://www.gluster.org/">GlusterFS</a> 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS  存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 <a href="https://docs.gluster.org/en/latest/Install-Guide/Install/#for-ubuntu">GlusterFS 官方网站</a>，搭建 Heketi 请参考  <a href="https://github.com/heketi/heketi/blob/master/docs/admin/readme.md">官方文档</a>。<!-- raw HTML omitted --></p>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="安装">安装</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"> <span style="color:#75715e">#安装源</span>
  yum install centos-release-gluster
  
-<span style=color:#75715e>#安装GlusterFS</span>
+<span style="color:#75715e">#安装GlusterFS</span>
 yum install glusterfs-server
-<span style=color:#75715e>#启动GlusterFS管理守护程序</span>
+<span style="color:#75715e">#启动GlusterFS管理守护程序</span>
 systemctl enable glusterd  
 systemctl start glusterd
 
-<span style=color:#75715e>#配置信任池</span>
-<span style=color:#75715e>#在server1上执行</span>
+<span style="color:#75715e">#配置信任池</span>
+<span style="color:#75715e">#在server1上执行</span>
 gluster peer probe server2
-<span style=color:#75715e>#在server2上执行</span>
+<span style="color:#75715e">#在server2上执行</span>
 gluster peer probe server1
-<span style=color:#75715e>#至此，集群已经完成</span>
+<span style="color:#75715e">#至此，集群已经完成</span>
 
-<span style=color:#75715e>#这里可以手动测试</span>
-<span style=color:#75715e>#设置GlusterFS卷</span>
+<span style="color:#75715e">#这里可以手动测试</span>
+<span style="color:#75715e">#设置GlusterFS卷</span>
 mkdir /bricks/brick1/gv0
-gluster volume create gv0 replica <span style=color:#ae81ff>2</span> server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0
+gluster volume create gv0 replica <span style="color:#ae81ff">2</span> server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0
 gluster volume start gv0  
 gluster volume info
-</code></pre></div><p></p><h2 id=测试>测试  </h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>mount -t glusterfs server1:/gv0 /mnt
-<span style=color:#66d9ef>for</span> i in <span style=color:#e6db74>`</span>seq -w <span style=color:#ae81ff>1</span> 100<span style=color:#e6db74>`</span>; <span style=color:#66d9ef>do</span> cp -rp /var/log/messages /mnt/copy-test-$i; <span style=color:#66d9ef>done</span>  
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="测试">测试  </h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mount -t glusterfs server1:/gv0 /mnt
+<span style="color:#66d9ef">for</span> i in <span style="color:#e6db74">`</span>seq -w <span style="color:#ae81ff">1</span> 100<span style="color:#e6db74">`</span>; <span style="color:#66d9ef">do</span> cp -rp /var/log/messages /mnt/copy-test-$i; <span style="color:#66d9ef">done</span>  
 ls -lA /mnt | wc -l  
 ls -lA /bricks/brick1/gv0  
-</code></pre></div><p></p><h2 id=heketi>heketi  </h2><p></p><h3 id=安装和初始化>安装和初始化</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=color:#960050;background-color:#1e0010>#安装</span>
-[<span style=color:#960050;background-color:#1e0010>root@node</span><span style=color:#ae81ff>1</span> <span style=color:#960050;background-color:#1e0010>heketi</span>]<span style=color:#960050;background-color:#1e0010>#</span> <span style=color:#960050;background-color:#1e0010>yum</span> <span style=color:#960050;background-color:#1e0010>install</span> <span style=color:#960050;background-color:#1e0010>heketi</span>
-<span style=color:#960050;background-color:#1e0010>#</span> <span style=color:#960050;background-color:#1e0010>heketi配置文件</span> <span style=color:#960050;background-color:#1e0010>/etc/heketi/heketi.json</span>
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="heketi">heketi  </h2>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3 id="安装和初始化">安装和初始化</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#960050;background-color:#1e0010">#安装</span>
+[<span style="color:#960050;background-color:#1e0010">root@node</span><span style="color:#ae81ff">1</span> <span style="color:#960050;background-color:#1e0010">heketi</span>]<span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">yum</span> <span style="color:#960050;background-color:#1e0010">install</span> <span style="color:#960050;background-color:#1e0010">heketi</span>
+<span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">heketi配置文件</span> <span style="color:#960050;background-color:#1e0010">/etc/heketi/heketi.json</span>
 {
-  <span style=color:#f92672>&#34;_port_comment&#34;</span>: <span style=color:#e6db74>&#34;Heketi Server Port Number&#34;</span>,
-  <span style=color:#f92672>&#34;port&#34;</span>: <span style=color:#e6db74>&#34;8080&#34;</span>,
+  <span style="color:#f92672">&#34;_port_comment&#34;</span>: <span style="color:#e6db74">&#34;Heketi Server Port Number&#34;</span>,
+  <span style="color:#f92672">&#34;port&#34;</span>: <span style="color:#e6db74">&#34;8080&#34;</span>,
 
-  <span style=color:#f92672>&#34;_use_auth&#34;</span>: <span style=color:#e6db74>&#34;Enable JWT authorization. Please enable for deployment&#34;</span>,
-  <span style=color:#f92672>&#34;use_auth&#34;</span>: <span style=color:#66d9ef>false</span>,
+  <span style="color:#f92672">&#34;_use_auth&#34;</span>: <span style="color:#e6db74">&#34;Enable JWT authorization. Please enable for deployment&#34;</span>,
+  <span style="color:#f92672">&#34;use_auth&#34;</span>: <span style="color:#66d9ef">false</span>,
 
-  <span style=color:#f92672>&#34;_jwt&#34;</span>: <span style=color:#e6db74>&#34;Private keys for access&#34;</span>,
-  <span style=color:#f92672>&#34;jwt&#34;</span>: {
-    <span style=color:#f92672>&#34;_admin&#34;</span>: <span style=color:#e6db74>&#34;Admin has access to all APIs&#34;</span>,
-    <span style=color:#f92672>&#34;admin&#34;</span>: {
-      <span style=color:#f92672>&#34;key&#34;</span>: <span style=color:#e6db74>&#34;123456&#34;</span>
+  <span style="color:#f92672">&#34;_jwt&#34;</span>: <span style="color:#e6db74">&#34;Private keys for access&#34;</span>,
+  <span style="color:#f92672">&#34;jwt&#34;</span>: {
+    <span style="color:#f92672">&#34;_admin&#34;</span>: <span style="color:#e6db74">&#34;Admin has access to all APIs&#34;</span>,
+    <span style="color:#f92672">&#34;admin&#34;</span>: {
+      <span style="color:#f92672">&#34;key&#34;</span>: <span style="color:#e6db74">&#34;123456&#34;</span>
     },
-    <span style=color:#f92672>&#34;_user&#34;</span>: <span style=color:#e6db74>&#34;User only has access to /volumes endpoint&#34;</span>,
-    <span style=color:#f92672>&#34;user&#34;</span>: {
-      <span style=color:#f92672>&#34;key&#34;</span>: <span style=color:#e6db74>&#34;123456&#34;</span>
+    <span style="color:#f92672">&#34;_user&#34;</span>: <span style="color:#e6db74">&#34;User only has access to /volumes endpoint&#34;</span>,
+    <span style="color:#f92672">&#34;user&#34;</span>: {
+      <span style="color:#f92672">&#34;key&#34;</span>: <span style="color:#e6db74">&#34;123456&#34;</span>
     }
   },
 
-  <span style=color:#f92672>&#34;_glusterfs_comment&#34;</span>: <span style=color:#e6db74>&#34;GlusterFS Configuration&#34;</span>,
-  <span style=color:#f92672>&#34;glusterfs&#34;</span>: {
-    <span style=color:#f92672>&#34;_executor_comment&#34;</span>: [
-      <span style=color:#e6db74>&#34;Execute plugin. Possible choices: mock, ssh&#34;</span>,
-      <span style=color:#e6db74>&#34;mock: This setting is used for testing and development.&#34;</span>,
-      <span style=color:#e6db74>&#34;      It will not send commands to any node.&#34;</span>,
-      <span style=color:#e6db74>&#34;ssh:  This setting will notify Heketi to ssh to the nodes.&#34;</span>,
-      <span style=color:#e6db74>&#34;      It will need the values in sshexec to be configured.&#34;</span>,
-      <span style=color:#e6db74>&#34;kubernetes: Communicate with GlusterFS containers over&#34;</span>,
-      <span style=color:#e6db74>&#34;            Kubernetes exec api.&#34;</span>
+  <span style="color:#f92672">&#34;_glusterfs_comment&#34;</span>: <span style="color:#e6db74">&#34;GlusterFS Configuration&#34;</span>,
+  <span style="color:#f92672">&#34;glusterfs&#34;</span>: {
+    <span style="color:#f92672">&#34;_executor_comment&#34;</span>: [
+      <span style="color:#e6db74">&#34;Execute plugin. Possible choices: mock, ssh&#34;</span>,
+      <span style="color:#e6db74">&#34;mock: This setting is used for testing and development.&#34;</span>,
+      <span style="color:#e6db74">&#34;      It will not send commands to any node.&#34;</span>,
+      <span style="color:#e6db74">&#34;ssh:  This setting will notify Heketi to ssh to the nodes.&#34;</span>,
+      <span style="color:#e6db74">&#34;      It will need the values in sshexec to be configured.&#34;</span>,
+      <span style="color:#e6db74">&#34;kubernetes: Communicate with GlusterFS containers over&#34;</span>,
+      <span style="color:#e6db74">&#34;            Kubernetes exec api.&#34;</span>
     ],
-    <span style=color:#f92672>&#34;executor&#34;</span>: <span style=color:#e6db74>&#34;ssh&#34;</span>,
+    <span style="color:#f92672">&#34;executor&#34;</span>: <span style="color:#e6db74">&#34;ssh&#34;</span>,
 
-    <span style=color:#f92672>&#34;_sshexec_comment&#34;</span>: <span style=color:#e6db74>&#34;SSH username and private key file information&#34;</span>,
-    <span style=color:#f92672>&#34;sshexec&#34;</span>: {
-      <span style=color:#f92672>&#34;keyfile&#34;</span>: <span style=color:#e6db74>&#34;/etc/heketi/id_rsa&#34;</span>,
-      <span style=color:#f92672>&#34;user&#34;</span>: <span style=color:#e6db74>&#34;root&#34;</span>
+    <span style="color:#f92672">&#34;_sshexec_comment&#34;</span>: <span style="color:#e6db74">&#34;SSH username and private key file information&#34;</span>,
+    <span style="color:#f92672">&#34;sshexec&#34;</span>: {
+      <span style="color:#f92672">&#34;keyfile&#34;</span>: <span style="color:#e6db74">&#34;/etc/heketi/id_rsa&#34;</span>,
+      <span style="color:#f92672">&#34;user&#34;</span>: <span style="color:#e6db74">&#34;root&#34;</span>
     },
 
-    <span style=color:#f92672>&#34;_kubeexec_comment&#34;</span>: <span style=color:#e6db74>&#34;Kubernetes configuration&#34;</span>,
-    <span style=color:#f92672>&#34;kubeexec&#34;</span>: {
-      <span style=color:#f92672>&#34;host&#34;</span> :<span style=color:#e6db74>&#34;https://kubernetes.host:8443&#34;</span>,
-      <span style=color:#f92672>&#34;cert&#34;</span> : <span style=color:#e6db74>&#34;/path/to/crt.file&#34;</span>,
-      <span style=color:#f92672>&#34;insecure&#34;</span>: <span style=color:#66d9ef>false</span>,
-      <span style=color:#f92672>&#34;user&#34;</span>: <span style=color:#e6db74>&#34;kubernetes username&#34;</span>,
-      <span style=color:#f92672>&#34;password&#34;</span>: <span style=color:#e6db74>&#34;password for kubernetes user&#34;</span>,
-      <span style=color:#f92672>&#34;namespace&#34;</span>: <span style=color:#e6db74>&#34;OpenShift project or Kubernetes namespace&#34;</span>,
-      <span style=color:#f92672>&#34;fstab&#34;</span>: <span style=color:#e6db74>&#34;Optional: Specify fstab file on node.  Default is /etc/fstab&#34;</span>
+    <span style="color:#f92672">&#34;_kubeexec_comment&#34;</span>: <span style="color:#e6db74">&#34;Kubernetes configuration&#34;</span>,
+    <span style="color:#f92672">&#34;kubeexec&#34;</span>: {
+      <span style="color:#f92672">&#34;host&#34;</span> :<span style="color:#e6db74">&#34;https://kubernetes.host:8443&#34;</span>,
+      <span style="color:#f92672">&#34;cert&#34;</span> : <span style="color:#e6db74">&#34;/path/to/crt.file&#34;</span>,
+      <span style="color:#f92672">&#34;insecure&#34;</span>: <span style="color:#66d9ef">false</span>,
+      <span style="color:#f92672">&#34;user&#34;</span>: <span style="color:#e6db74">&#34;kubernetes username&#34;</span>,
+      <span style="color:#f92672">&#34;password&#34;</span>: <span style="color:#e6db74">&#34;password for kubernetes user&#34;</span>,
+      <span style="color:#f92672">&#34;namespace&#34;</span>: <span style="color:#e6db74">&#34;OpenShift project or Kubernetes namespace&#34;</span>,
+      <span style="color:#f92672">&#34;fstab&#34;</span>: <span style="color:#e6db74">&#34;Optional: Specify fstab file on node.  Default is /etc/fstab&#34;</span>
     },
 
-    <span style=color:#f92672>&#34;_db_comment&#34;</span>: <span style=color:#e6db74>&#34;Database file name&#34;</span>,
-    <span style=color:#f92672>&#34;db&#34;</span>: <span style=color:#e6db74>&#34;/var/lib/heketi/heketi.db&#34;</span>,
+    <span style="color:#f92672">&#34;_db_comment&#34;</span>: <span style="color:#e6db74">&#34;Database file name&#34;</span>,
+    <span style="color:#f92672">&#34;db&#34;</span>: <span style="color:#e6db74">&#34;/var/lib/heketi/heketi.db&#34;</span>,
 
-    <span style=color:#f92672>&#34;_loglevel_comment&#34;</span>: [
-      <span style=color:#e6db74>&#34;Set log level. Choices are:&#34;</span>,
-      <span style=color:#e6db74>&#34;  none, critical, error, warning, info, debug&#34;</span>,
-      <span style=color:#e6db74>&#34;Default is warning&#34;</span>
+    <span style="color:#f92672">&#34;_loglevel_comment&#34;</span>: [
+      <span style="color:#e6db74">&#34;Set log level. Choices are:&#34;</span>,
+      <span style="color:#e6db74">&#34;  none, critical, error, warning, info, debug&#34;</span>,
+      <span style="color:#e6db74">&#34;Default is warning&#34;</span>
     ],
-    <span style=color:#f92672>&#34;loglevel&#34;</span> : <span style=color:#e6db74>&#34;debug&#34;</span>
+    <span style="color:#f92672">&#34;loglevel&#34;</span> : <span style="color:#e6db74">&#34;debug&#34;</span>
   }
-}[<span style=color:#960050;background-color:#1e0010>root@node</span><span style=color:#ae81ff>1</span> <span style=color:#960050;background-color:#1e0010>heketi</span>]<span style=color:#960050;background-color:#1e0010>#</span> <span style=color:#960050;background-color:#1e0010>systemctl</span> <span style=color:#960050;background-color:#1e0010>enable</span> <span style=color:#960050;background-color:#1e0010>heketi</span>
-[<span style=color:#960050;background-color:#1e0010>root@node</span><span style=color:#ae81ff>1</span> <span style=color:#960050;background-color:#1e0010>heketi</span>]<span style=color:#960050;background-color:#1e0010>#</span> <span style=color:#960050;background-color:#1e0010>systemctl</span> <span style=color:#960050;background-color:#1e0010>start</span> <span style=color:#960050;background-color:#1e0010>heketi</span>
-[<span style=color:#960050;background-color:#1e0010>root@node</span><span style=color:#ae81ff>1</span> <span style=color:#960050;background-color:#1e0010>heketi</span>]<span style=color:#960050;background-color:#1e0010>#</span> <span style=color:#960050;background-color:#1e0010>systemctl</span> <span style=color:#960050;background-color:#1e0010>status</span> <span style=color:#960050;background-color:#1e0010>heketi</span>
-</code></pre></div><p></p><h3 id=接入集群>接入集群</h3><p></p><h4 id=设置集群拓扑>设置集群拓扑 </h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=color:#960050;background-color:#1e0010>/etc/heketi/topology.json</span>
+}[<span style="color:#960050;background-color:#1e0010">root@node</span><span style="color:#ae81ff">1</span> <span style="color:#960050;background-color:#1e0010">heketi</span>]<span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">systemctl</span> <span style="color:#960050;background-color:#1e0010">enable</span> <span style="color:#960050;background-color:#1e0010">heketi</span>
+[<span style="color:#960050;background-color:#1e0010">root@node</span><span style="color:#ae81ff">1</span> <span style="color:#960050;background-color:#1e0010">heketi</span>]<span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">systemctl</span> <span style="color:#960050;background-color:#1e0010">start</span> <span style="color:#960050;background-color:#1e0010">heketi</span>
+[<span style="color:#960050;background-color:#1e0010">root@node</span><span style="color:#ae81ff">1</span> <span style="color:#960050;background-color:#1e0010">heketi</span>]<span style="color:#960050;background-color:#1e0010">#</span> <span style="color:#960050;background-color:#1e0010">systemctl</span> <span style="color:#960050;background-color:#1e0010">status</span> <span style="color:#960050;background-color:#1e0010">heketi</span>
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3 id="接入集群">接入集群</h3>
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h4 id="设置集群拓扑">设置集群拓扑 </h4>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#960050;background-color:#1e0010">/etc/heketi/topology.json</span>
 {
-    <span style=color:#f92672>&#34;clusters&#34;</span>: [
+    <span style="color:#f92672">&#34;clusters&#34;</span>: [
         {
-            <span style=color:#f92672>&#34;nodes&#34;</span>: [
+            <span style="color:#f92672">&#34;nodes&#34;</span>: [
                 {
-                    <span style=color:#f92672>&#34;node&#34;</span>: {
-                        <span style=color:#f92672>&#34;hostnames&#34;</span>: {
-                            <span style=color:#f92672>&#34;manage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.84&#34;</span>
+                    <span style="color:#f92672">&#34;node&#34;</span>: {
+                        <span style="color:#f92672">&#34;hostnames&#34;</span>: {
+                            <span style="color:#f92672">&#34;manage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.84&#34;</span>
                             ],
-                            <span style=color:#f92672>&#34;storage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.84&#34;</span>
+                            <span style="color:#f92672">&#34;storage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.84&#34;</span>
                             ]
                         },
-                        <span style=color:#f92672>&#34;zone&#34;</span>: <span style=color:#ae81ff>1</span>
+                        <span style="color:#f92672">&#34;zone&#34;</span>: <span style="color:#ae81ff">1</span>
                     },
-                    <span style=color:#f92672>&#34;devices&#34;</span>: [
+                    <span style="color:#f92672">&#34;devices&#34;</span>: [
                         {
-                            <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;/dev/sdb&#34;</span>,
-                            <span style=color:#f92672>&#34;destroydata&#34;</span>: <span style=color:#66d9ef>false</span>
+                            <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;/dev/sdb&#34;</span>,
+                            <span style="color:#f92672">&#34;destroydata&#34;</span>: <span style="color:#66d9ef">false</span>
                         }
                     ]
                 },
                 {
-                    <span style=color:#f92672>&#34;node&#34;</span>: {
-                        <span style=color:#f92672>&#34;hostnames&#34;</span>: {
-                            <span style=color:#f92672>&#34;manage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.85&#34;</span>
+                    <span style="color:#f92672">&#34;node&#34;</span>: {
+                        <span style="color:#f92672">&#34;hostnames&#34;</span>: {
+                            <span style="color:#f92672">&#34;manage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.85&#34;</span>
                             ],
-                            <span style=color:#f92672>&#34;storage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.85&#34;</span>
+                            <span style="color:#f92672">&#34;storage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.85&#34;</span>
                             ]
                         },
-                        <span style=color:#f92672>&#34;zone&#34;</span>: <span style=color:#ae81ff>1</span>
+                        <span style="color:#f92672">&#34;zone&#34;</span>: <span style="color:#ae81ff">1</span>
                     },
-                    <span style=color:#f92672>&#34;devices&#34;</span>: [
+                    <span style="color:#f92672">&#34;devices&#34;</span>: [
                         {
-                            <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;/dev/sdb&#34;</span>,
-                            <span style=color:#f92672>&#34;destroydata&#34;</span>: <span style=color:#66d9ef>false</span>
+                            <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;/dev/sdb&#34;</span>,
+                            <span style="color:#f92672">&#34;destroydata&#34;</span>: <span style="color:#66d9ef">false</span>
                         }
                     ]
                 },
                 {
-                    <span style=color:#f92672>&#34;node&#34;</span>: {
-                        <span style=color:#f92672>&#34;hostnames&#34;</span>: {
-                            <span style=color:#f92672>&#34;manage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.86&#34;</span>
+                    <span style="color:#f92672">&#34;node&#34;</span>: {
+                        <span style="color:#f92672">&#34;hostnames&#34;</span>: {
+                            <span style="color:#f92672">&#34;manage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.86&#34;</span>
                             ],
-                            <span style=color:#f92672>&#34;storage&#34;</span>: [
-                                <span style=color:#e6db74>&#34;172.16.11.86&#34;</span>
+                            <span style="color:#f92672">&#34;storage&#34;</span>: [
+                                <span style="color:#e6db74">&#34;172.16.11.86&#34;</span>
                             ]
                         },
-                        <span style=color:#f92672>&#34;zone&#34;</span>: <span style=color:#ae81ff>1</span>
+                        <span style="color:#f92672">&#34;zone&#34;</span>: <span style="color:#ae81ff">1</span>
                     },
-                    <span style=color:#f92672>&#34;devices&#34;</span>: [
+                    <span style="color:#f92672">&#34;devices&#34;</span>: [
                         {
-                            <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;/dev/sdb&#34;</span>,
-                            <span style=color:#f92672>&#34;destroydata&#34;</span>: <span style=color:#66d9ef>false</span>
+                            <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;/dev/sdb&#34;</span>,
+                            <span style="color:#f92672">&#34;destroydata&#34;</span>: <span style="color:#66d9ef">false</span>
                         }
                     ]
                 }
@@ -157,40 +313,90 @@ ls -lA /bricks/brick1/gv0
 }
 
 
-</code></pre></div><p></p><h3 id=导入拓扑和排错>导入拓扑和排错</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>
-<span style=color:#75715e># 报错</span>
-<span style=color:#f92672>[</span>root@node1 heketi<span style=color:#f92672>]</span><span style=color:#75715e># heketi-cli topology load --json=/etc/heketi/topology.json</span>
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3 id="导入拓扑和排错">导入拓扑和排错</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">
+<span style="color:#75715e"># 报错</span>
+<span style="color:#f92672">[</span>root@node1 heketi<span style="color:#f92672">]</span><span style="color:#75715e"># heketi-cli topology load --json=/etc/heketi/topology.json</span>
 	Found node 192.168.65.128 on cluster baa6920e4f4dae0c07fdcd5a84fb9f3c
-		Adding device /dev/sdb ... Unable to add device: Setup of device /dev/sdb failed <span style=color:#f92672>(</span>already initialized or contains data?<span style=color:#f92672>)</span>:   Device /dev/sdb excluded by a filter.
+		Adding device /dev/sdb ... Unable to add device: Setup of device /dev/sdb failed <span style="color:#f92672">(</span>already initialized or contains data?<span style="color:#f92672">)</span>:   Device /dev/sdb excluded by a filter.
 	Found node 192.168.65.129 on cluster baa6920e4f4dae0c07fdcd5a84fb9f3c
-		Adding device /dev/sdb ... Unable to add device: Setup of device /dev/sdb failed <span style=color:#f92672>(</span>already initialized or contains data?<span style=color:#f92672>)</span>: WARNING: xfs signature detected on /dev/sdb at offset 0. Wipe it? <span style=color:#f92672>[</span>y/n<span style=color:#f92672>]</span>: <span style=color:#f92672>[</span>n<span style=color:#f92672>]</span>
+		Adding device /dev/sdb ... Unable to add device: Setup of device /dev/sdb failed <span style="color:#f92672">(</span>already initialized or contains data?<span style="color:#f92672">)</span>: WARNING: xfs signature detected on /dev/sdb at offset 0. Wipe it? <span style="color:#f92672">[</span>y/n<span style="color:#f92672">]</span>: <span style="color:#f92672">[</span>n<span style="color:#f92672">]</span>
   Aborted wiping of xfs.
-  <span style=color:#ae81ff>1</span> existing signature left on the device.
-<span style=color:#75715e>#前面测试测时候创建了文件系统，需要先清除文件系统  </span>
+  <span style="color:#ae81ff">1</span> existing signature left on the device.
+<span style="color:#75715e">#前面测试测时候创建了文件系统，需要先清除文件系统  </span>
 
-<span style=color:#f92672>[</span>root@node1 heketi<span style=color:#f92672>]</span><span style=color:#75715e># wipefs  /dev/sdb --force --all </span>
-<span style=color:#75715e>#或者可以直接在拓扑文件中设置  &#34;destroydata&#34;: true</span>
-<span style=color:#75715e>#再次执行  </span>
-<span style=color:#f92672>[</span>root@node1 heketi<span style=color:#f92672>]</span><span style=color:#75715e># heketi-cli topology load --json=/etc/heketi/topology.json</span>
+<span style="color:#f92672">[</span>root@node1 heketi<span style="color:#f92672">]</span><span style="color:#75715e"># wipefs  /dev/sdb --force --all </span>
+<span style="color:#75715e">#或者可以直接在拓扑文件中设置  &#34;destroydata&#34;: true</span>
+<span style="color:#75715e">#再次执行  </span>
+<span style="color:#f92672">[</span>root@node1 heketi<span style="color:#f92672">]</span><span style="color:#75715e"># heketi-cli topology load --json=/etc/heketi/topology.json</span>
 	Found node 192.168.65.128 on cluster baa6920e4f4dae0c07fdcd5a84fb9f3c
 		Adding device /dev/sdb ... OK
 	Found node 192.168.65.129 on cluster baa6920e4f4dae0c07fdcd5a84fb9f3c
 		Adding device /dev/sdb ... OK
-<span style=color:#75715e>#验证  </span>
-heketi-cli volume list --secret <span style=color:#ae81ff>123456</span> --user admin 
-<span style=color:#75715e>## 创建一个3g的卷  </span>
-heketi-cli volume create --size<span style=color:#f92672>=</span><span style=color:#ae81ff>3</span>
-</code></pre></div><p></p><h3 id=维护>维护</h3><p></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell> heketi-cli topology info
- <span style=color:#75715e>#删除一个设备 </span>
- <span style=color:#f92672>[</span>root@biao heketi<span style=color:#f92672>]</span><span style=color:#75715e>#  heketi-cli device disable 537aeba13165ba6fd6015c6f3a37e6f9</span>
- <span style=color:#f92672>[</span>root@biao heketi<span style=color:#f92672>]</span><span style=color:#75715e>#  heketi-cli device remove   537aeba13165ba6fd6015c6f3a37e6f9 </span>
+<span style="color:#75715e">#验证  </span>
+heketi-cli volume list --secret <span style="color:#ae81ff">123456</span> --user admin 
+<span style="color:#75715e">## 创建一个3g的卷  </span>
+heketi-cli volume create --size<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h3 id="维护">维护</h3>
+<p><!-- raw HTML omitted --></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"> heketi-cli topology info
+ <span style="color:#75715e">#删除一个设备 </span>
+ <span style="color:#f92672">[</span>root@biao heketi<span style="color:#f92672">]</span><span style="color:#75715e">#  heketi-cli device disable 537aeba13165ba6fd6015c6f3a37e6f9</span>
+ <span style="color:#f92672">[</span>root@biao heketi<span style="color:#f92672">]</span><span style="color:#75715e">#  heketi-cli device remove   537aeba13165ba6fd6015c6f3a37e6f9 </span>
 Device 537aeba13165ba6fd6015c6f3a37e6f9 is now removed
-<span style=color:#f92672>[</span>root@biao heketi<span style=color:#f92672>]</span><span style=color:#75715e>#  heketi-cli device delete  537aeba13165ba6fd6015c6f3a37e6f9 </span>
+<span style="color:#f92672">[</span>root@biao heketi<span style="color:#f92672">]</span><span style="color:#75715e">#  heketi-cli device delete  537aeba13165ba6fd6015c6f3a37e6f9 </span>
 Device 537aeba13165ba6fd6015c6f3a37e6f9 deleted
-<span style=color:#75715e># 删除一个node</span>
-<span style=color:#f92672>[</span>root@biao heketi<span style=color:#f92672>]</span><span style=color:#75715e># heketi-cli  node delete f9b1d2051b9c965e55247cc84703c03c</span>
+<span style="color:#75715e"># 删除一个node</span>
+<span style="color:#f92672">[</span>root@biao heketi<span style="color:#f92672">]</span><span style="color:#75715e"># heketi-cli  node delete f9b1d2051b9c965e55247cc84703c03c</span>
 Node f9b1d2051b9c965e55247cc84703c03c deleted
-<span style=color:#75715e># 删除一个集群 </span>
-<span style=color:#f92672>[</span>root@biao heketi<span style=color:#f92672>]</span><span style=color:#75715e># heketi-cli  cluster delete 107061693fa3fc61c98c10f6b8d9bb46</span>
+<span style="color:#75715e"># 删除一个集群 </span>
+<span style="color:#f92672">[</span>root@biao heketi<span style="color:#f92672">]</span><span style="color:#75715e"># heketi-cli  cluster delete 107061693fa3fc61c98c10f6b8d9bb46</span>
 Cluster 107061693fa3fc61c98c10f6b8d9bb46 deleted
-</code></pre></div><p>     <a href=https://github.com/heketi/heketi/blob/master/docs/admin/topology.md>https://github.com/heketi/heketi/blob/master/docs/admin/topology.md</a>       <a href=https://github.com/heketi/heketi/blob/master/docs/admin/maintenance.md>https://github.com/heketi/heketi/blob/master/docs/admin/maintenance.md</a>           <a href=https://github.com/heketi/heketi/blob/master/docs/admin/readme.md>https://github.com/heketi/heketi/blob/master/docs/admin/readme.md</a>       <a href=https://github.com/heketi/heketi/blob/master/docs/admin/topology.md>https://github.com/heketi/heketi/blob/master/docs/admin/topology.md</a>             </p><ul class=pa0></ul><div class="mt6 instapaper_ignoref"></div></div><aside class="w-30-l mt6-l"></aside></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>
+</code></pre></div><p><!-- raw HTML omitted -->     <a href="https://github.com/heketi/heketi/blob/master/docs/admin/topology.md">https://github.com/heketi/heketi/blob/master/docs/admin/topology.md</a>  <!-- raw HTML omitted -->     <a href="https://github.com/heketi/heketi/blob/master/docs/admin/maintenance.md">https://github.com/heketi/heketi/blob/master/docs/admin/maintenance.md</a><!-- raw HTML omitted -->           <a href="https://github.com/heketi/heketi/blob/master/docs/admin/readme.md">https://github.com/heketi/heketi/blob/master/docs/admin/readme.md</a>  <!-- raw HTML omitted -->     <a href="https://github.com/heketi/heketi/blob/master/docs/admin/topology.md">https://github.com/heketi/heketi/blob/master/docs/admin/topology.md</a>  <!-- raw HTML omitted -->           <!-- raw HTML omitted --></p>
+<ul class="pa0">
+  
+</ul>
+<div class="mt6 instapaper_ignoref">
+      
+      
+      </div>
+    </div>
+
+    <aside class="w-30-l mt6-l">
+
+
+
+
+</aside>
+
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="http://example.org/" >
+    &copy;  My New Hugo Site 2021 
+  </a>
+    <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+  </div>
+</footer>
+
+  </body>
+</html>

@@ -1,128 +1,326 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>mongodb副本集搭建 | snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>mongodb副本集搭建 | My New Hugo Site</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
 正常状态下拓扑故障切换过程
-副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod +x mongod && cp mongod /usr/bin/创建用户并设置密码： useradd mongod && passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><meta property="og:title" content="mongodb副本集搭建"><meta property="og:description" content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
-正常状态下拓扑故障切换过程
-副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod +x mongod && cp mongod /usr/bin/创建用户并设置密码： useradd mongod && passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."><meta property="og:type" content="article"><meta property="og:url" content="dingtalk.pub/post/1960034/"><meta property="article:section" content="post"><meta property="article:published_time" content="2019-06-23T06:44:57+00:00"><meta property="article:modified_time" content="2019-06-23T06:44:57+00:00"><meta itemprop=name content="mongodb副本集搭建"><meta itemprop=description content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
-正常状态下拓扑故障切换过程
-副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod +x mongod && cp mongod /usr/bin/创建用户并设置密码： useradd mongod && passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."><meta itemprop=datePublished content="2019-06-23T06:44:57+00:00"><meta itemprop=dateModified content="2019-06-23T06:44:57+00:00"><meta itemprop=wordCount content="311"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="mongodb副本集搭建"><meta name=twitter:description content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
-正常状态下拓扑故障切换过程
-副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod +x mongod && cp mongod /usr/bin/创建用户并设置密码： useradd mongod && passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."></head><body class="ma0 avenir bg-near-white"><header><div class=bg-black><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav></div></header><main class=pb7 role=main><article class="flex-l flex-wrap justify-between mw8 center ph3"><header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked">POSTS</aside><div id=sharing class=mt3><a href="https://www.facebook.com/sharer.php?u=dingtalk.pub/dingtalk.pub/post/1960034/" class="facebook no-underline" aria-label="share on Facebook"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765 50.32h6.744V33.998h4.499l.596-5.624h-5.095l.007-2.816c0-1.466.14-2.253 2.244-2.253h2.812V17.68h-4.5c-5.405.0-7.307 2.729-7.307 7.317v3.377h-3.369v5.625h3.369V50.32zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd"/></svg></a><a href="https://twitter.com/share?url=dingtalk.pub/dingtalk.pub/post/1960034/&text=mongodb%e5%89%af%e6%9c%ac%e9%9b%86%e6%90%ad%e5%bb%ba" class="twitter no-underline" aria-label="share on Twitter"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167 22.283c-2.619.953-4.274 3.411-4.086 6.101l.063 1.038-1.048-.127c-3.813-.487-7.145-2.139-9.974-4.915l-1.383-1.377-.356 1.017c-.754 2.267-.272 4.661 1.299 6.271.838.89.649 1.017-.796.487-.503-.169-.943-.296-.985-.233-.146.149.356 2.076.754 2.839.545 1.06 1.655 2.097 2.871 2.712l1.027.487-1.215.021c-1.173.0-1.215.021-1.089.467.419 1.377 2.074 2.839 3.918 3.475l1.299.444-1.131.678c-1.676.976-3.646 1.526-5.616 1.568C19.775 43.256 19 43.341 19 43.405c0 .211 2.557 1.397 4.044 1.864 4.463 1.377 9.765.783 13.746-1.568 2.829-1.673 5.657-5 6.978-8.221.713-1.716 1.425-4.851 1.425-6.354.0-.975.063-1.102 1.236-2.267.692-.678 1.341-1.419 1.467-1.631.21-.403.188-.403-.88-.043-1.781.636-2.033.551-1.152-.402.649-.678 1.425-1.907 1.425-2.267.0-.063-.314.042-.671.233-.377.212-1.215.53-1.844.72l-1.131.361-1.027-.7c-.566-.381-1.361-.805-1.781-.932C39.766 21.902 38.131 21.944 37.167 22.283zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a><a href="https://www.linkedin.com/shareArticle?mini=true&url=dingtalk.pub/dingtalk.pub/post/1960034/&title=mongodb%e5%89%af%e6%9c%ac%e9%9b%86%e6%90%ad%e5%bb%ba" class="linkedin no-underline" aria-label="share on LinkedIn"><svg height="32" style="enable-background:new 0 0 65 65" viewBox="0 0 65 65" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M50.837 48.137V36.425c0-6.275-3.35-9.195-7.816-9.195-3.604.0-5.219 1.983-6.119 3.374V27.71h-6.79c.09 1.917.0 20.427.0 20.427h6.79V36.729c0-.609.044-1.219.224-1.655.49-1.22 1.607-2.483 3.482-2.483 2.458.0 3.44 1.873 3.44 4.618v10.929H50.837zM22.959 24.922c2.367.0 3.842-1.57 3.842-3.531-.044-2.003-1.475-3.528-3.797-3.528s-3.841 1.524-3.841 3.528c0 1.961 1.474 3.531 3.753 3.531H22.959zM34 64C17.432 64 4 50.568 4 34 4 17.431 17.432 4 34 4s30 13.431 30 30c0 16.568-13.432 30-30 30zM26.354 48.137V27.71h-6.789v20.427h6.789z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a></div><h1 class="f1 athelas mt3 mb1">mongodb副本集搭建</h1><time class="f6 mv4 dib tracked" datetime=2019-06-23T06:44:57Z>June 23, 2019</time></header><div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p></p><h2 id=介绍>介绍</h2><p>副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库</p><p><img src=/images/1960034_1.png alt>正常状态下拓扑<img src=/images/1960034_2.png alt>故障切换过程</p><p>副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。</p><h2 id=部署>部署</h2><p>下载mongod：<a href=https://www.mongodb.com/download-center/community>https://www.mongodb.com/download-center/community</a>加入到系统路径：chmod +x mongod && cp mongod /usr/bin/创建用户并设置密码： useradd mongod && passwd mongod编辑配置文件  </p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># mongod.conf</span>
+副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod &#43;x mongod &amp;&amp; cp mongod /usr/bin/创建用户并设置密码： useradd mongod &amp;&amp; passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1.">
+    <meta name="generator" content="Hugo 0.83.1" />
+    
+    
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+    
 
-<span style=color:#75715e># for documentation of all options, see:</span>
-<span style=color:#75715e>#   http://docs.mongodb.org/manual/reference/configuration-options/</span>
-<span style=color:#75715e># where to write logging data.</span>
-<span style=color:#f92672>systemLog</span>:
-  <span style=color:#f92672>destination</span>: <span style=color:#ae81ff>file</span>
-  <span style=color:#f92672>logAppend</span>: <span style=color:#66d9ef>true</span>
-  <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/var/log/mongodb/mongod1.log</span>
-<span style=color:#75715e># Where and how to store data.</span>
-<span style=color:#f92672>storage</span>:
-  <span style=color:#f92672>dbPath</span>: <span style=color:#ae81ff>/var/lib/mongo1</span>
-  <span style=color:#f92672>journal</span>:
-    <span style=color:#f92672>enabled</span>: <span style=color:#66d9ef>true</span>
-<span style=color:#75715e>#  engine:</span>
-<span style=color:#75715e>#  mmapv1:</span>
-<span style=color:#75715e>#  wiredTiger:</span>
-<span style=color:#75715e># how the process runs</span>
-<span style=color:#f92672>processManagement</span>:
-  <span style=color:#f92672>fork</span>: <span style=color:#66d9ef>true</span>  <span style=color:#75715e># fork and run in background</span>
-  <span style=color:#f92672>pidFilePath</span>: <span style=color:#ae81ff>/var/run/mongodb/mongod1.pid </span> <span style=color:#75715e># location of pidfile</span>
-  <span style=color:#f92672>timeZoneInfo</span>: <span style=color:#ae81ff>/usr/share/zoneinfo</span>
-<span style=color:#75715e># network interfaces</span>
-<span style=color:#75715e># bindIp默认是127的，需要改成本机地址或者0.0.0.0，以远程连接，端口如果是单机部署，需要区分不同的端口</span>
-<span style=color:#f92672>net</span>:
-  <span style=color:#f92672>port</span>: <span style=color:#ae81ff>27017</span>
-  <span style=color:#f92672>bindIp: 127.0.0.1,172.16.13.44  # Enter 0.0.0.0,:</span>: <span style=color:#ae81ff>to bind to all IPv4 and IPv6 addresses or, alternatively, use the net.bindIpAll setting.</span>
-<span style=color:#75715e>#security:</span>
-<span style=color:#75715e>#  authorization: enabled</span>
-<span style=color:#75715e>#  keyFile: /tmp/key.file</span>
-<span style=color:#75715e>#operationProfiling:</span>
-<span style=color:#75715e>#打开副本集功能</span>
-<span style=color:#f92672>replication</span>:
-  <span style=color:#f92672>replSetName</span>: <span style=color:#e6db74>&#34;rs0&#34;</span>
-<span style=color:#75715e>#sharding:</span>
-<span style=color:#75715e>## Enterprise-Only Options</span>
-<span style=color:#75715e>#auditLog:</span>
-<span style=color:#75715e>#snmp:</span>
-</code></pre></div><p>将mongo添加到系统服务，以便管理   ，vim /usr/lib/systemd/system/mongod1.service</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>
-<span style=color:#75715e>#单机部署的实例如下</span>
-<span style=color:#f92672>[</span>Unit<span style=color:#f92672>]</span>
-Description<span style=color:#f92672>=</span>MongoDB Database Server
-After<span style=color:#f92672>=</span>network.target
-Documentation<span style=color:#f92672>=</span>https://docs.mongodb.org/manual
+    
 
-<span style=color:#f92672>[</span>Service<span style=color:#f92672>]</span>
-User<span style=color:#f92672>=</span>mongod
-Group<span style=color:#f92672>=</span>mongod
-Environment<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;OPTIONS=-f /etc/mongod1.conf&#34;</span>
-EnvironmentFile<span style=color:#f92672>=</span>-/etc/sysconfig/mongod
-ExecStart<span style=color:#f92672>=</span>/usr/bin/mongod $OPTIONS
-<span style=color:#75715e>#多机部署的话，注意修改这里的配置</span>
-ExecStartPre<span style=color:#f92672>=</span>/usr/bin/mkdir -p /var/run/mongodb1
-ExecStartPre<span style=color:#f92672>=</span>/usr/bin/chown mongod:mongod /var/run/mongodb1
-ExecStartPre<span style=color:#f92672>=</span>/usr/bin/chmod <span style=color:#ae81ff>0755</span> /var/run/mongodb1
-PermissionsStartOnly<span style=color:#f92672>=</span>true
-PIDFile<span style=color:#f92672>=</span>/var/run/mongodb/mongod1.pid
-Type<span style=color:#f92672>=</span>forking
-<span style=color:#75715e># file size</span>
-LimitFSIZE<span style=color:#f92672>=</span>infinity
-<span style=color:#75715e># cpu time</span>
-LimitCPU<span style=color:#f92672>=</span>infinity
-<span style=color:#75715e># virtual memory size</span>
-LimitAS<span style=color:#f92672>=</span>infinity
-<span style=color:#75715e># open files</span>
-LimitNOFILE<span style=color:#f92672>=</span><span style=color:#ae81ff>64000</span>
-<span style=color:#75715e># processes/threads</span>
-LimitNPROC<span style=color:#f92672>=</span><span style=color:#ae81ff>64000</span>
-<span style=color:#75715e># locked memory</span>
-LimitMEMLOCK<span style=color:#f92672>=</span>infinity
-<span style=color:#75715e># total threads (user+kernel)</span>
-TasksMax<span style=color:#f92672>=</span>infinity
-TasksAccounting<span style=color:#f92672>=</span>false
-<span style=color:#75715e># Recommended limits for for mongod as specified in</span>
-<span style=color:#75715e># http://docs.mongodb.org/manual/reference/ulimit/#recommended-settings</span>
-<span style=color:#f92672>[</span>Install<span style=color:#f92672>]</span>
-WantedBy<span style=color:#f92672>=</span>multi-user.target
-</code></pre></div><p>启动服务， systemctl  start mongod。然后连接服务器，<code>mongo --port 27019</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>use admin
-rs.initiate<span style=color:#f92672>()</span>
-<span style=color:#75715e>#添加副本集成员</span>
-rs.add<span style=color:#f92672>(</span><span style=color:#e6db74>&#39;172.16.13.xx:27018&#39;</span><span style=color:#f92672>)</span>
-<span style=color:#75715e>#删除节点</span>
-rs.remove<span style=color:#f92672>(</span><span style=color:#e6db74>&#39;172.16.13.xx:27018&#39;</span><span style=color:#f92672>)</span>
-<span style=color:#75715e>#故障切换，主动关闭主库</span>
+  
+  
+    <link rel="stylesheet" href="/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css" >
+  
+
+
+
+
+    
+      
+
+    
+
+    
+    
+    <meta property="og:title" content="mongodb副本集搭建" />
+<meta property="og:description" content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
+正常状态下拓扑故障切换过程
+副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod &#43;x mongod &amp;&amp; cp mongod /usr/bin/创建用户并设置密码： useradd mongod &amp;&amp; passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://example.org/post/1960034/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2019-06-23T06:44:57&#43;00:00" />
+<meta property="article:modified_time" content="2019-06-23T06:44:57&#43;00:00" />
+
+<meta itemprop="name" content="mongodb副本集搭建">
+<meta itemprop="description" content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
+正常状态下拓扑故障切换过程
+副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod &#43;x mongod &amp;&amp; cp mongod /usr/bin/创建用户并设置密码： useradd mongod &amp;&amp; passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."><meta itemprop="datePublished" content="2019-06-23T06:44:57&#43;00:00" />
+<meta itemprop="dateModified" content="2019-06-23T06:44:57&#43;00:00" />
+<meta itemprop="wordCount" content="311">
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="mongodb副本集搭建"/>
+<meta name="twitter:description" content="介绍 副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库
+正常状态下拓扑故障切换过程
+副本集有以下特点：1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。 部署 下载mongod：https://www.mongodb.com/download-center/community加入到系统路径：chmod &#43;x mongod &amp;&amp; cp mongod /usr/bin/创建用户并设置密码： useradd mongod &amp;&amp; passwd mongod编辑配置文件 # mongod.conf # for documentation of all options, see: # http://docs.mongodb.org/manual/reference/configuration-options/ # where to write logging data. systemLog: destination: file logAppend: true path: /var/log/mongodb/mongod1.log # Where and how to store data. storage: dbPath: /var/lib/mongo1 journal: enabled: true # engine: # mmapv1: # wiredTiger: # how the process runs processManagement: fork: true # fork and run in background pidFilePath: /var/run/mongodb/mongod1."/>
+
+	
+  </head>
+
+  <body class="ma0 avenir bg-near-white">
+
+    
+   
+  
+
+  <header>
+    <div class="bg-black">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="/" class="f3 fw2 hover-white no-underline white-90 dib">
+      
+        My New Hugo Site
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+</nav>
+
+    </div>
+  </header>
+
+
+
+    <main class="pb7" role="main">
+      
+  
+  <article class="flex-l flex-wrap justify-between mw8 center ph3">
+    <header class="mt4 w-100">
+      <aside class="instapaper_ignoref b helvetica tracked">
+          
+        POSTS
+      </aside>
+      
+
+
+
+
+  <div id="sharing" class="mt3">
+
+    
+    <a href="https://www.facebook.com/sharer.php?u=http://example.org/post/1960034/" class="facebook no-underline" aria-label="share on Facebook">
+      <svg height="32px"  style="enable-background:new 0 0 67 67;" version="1.1" viewBox="0 0 67 67" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765,50.32h6.744V33.998h4.499l0.596-5.624h-5.095  l0.007-2.816c0-1.466,0.14-2.253,2.244-2.253h2.812V17.68h-4.5c-5.405,0-7.307,2.729-7.307,7.317v3.377h-3.369v5.625h3.369V50.32z   M33,64C16.432,64,3,50.569,3,34S16.432,4,33,4s30,13.431,30,30S49.568,64,33,64z" style="fill-rule:evenodd;clip-rule:evenodd;"/></svg>
+
+    </a>
+
+    
+    
+    <a href="https://twitter.com/share?url=http://example.org/post/1960034/&amp;text=mongodb%e5%89%af%e6%9c%ac%e9%9b%86%e6%90%ad%e5%bb%ba" class="twitter no-underline" aria-label="share on Twitter">
+      <svg height="32px"  style="enable-background:new 0 0 67 67;" version="1.1" viewBox="0 0 67 67" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167,22.283c-2.619,0.953-4.274,3.411-4.086,6.101  l0.063,1.038l-1.048-0.127c-3.813-0.487-7.145-2.139-9.974-4.915l-1.383-1.377l-0.356,1.017c-0.754,2.267-0.272,4.661,1.299,6.271  c0.838,0.89,0.649,1.017-0.796,0.487c-0.503-0.169-0.943-0.296-0.985-0.233c-0.146,0.149,0.356,2.076,0.754,2.839  c0.545,1.06,1.655,2.097,2.871,2.712l1.027,0.487l-1.215,0.021c-1.173,0-1.215,0.021-1.089,0.467  c0.419,1.377,2.074,2.839,3.918,3.475l1.299,0.444l-1.131,0.678c-1.676,0.976-3.646,1.526-5.616,1.568  C19.775,43.256,19,43.341,19,43.405c0,0.211,2.557,1.397,4.044,1.864c4.463,1.377,9.765,0.783,13.746-1.568  c2.829-1.673,5.657-5,6.978-8.221c0.713-1.716,1.425-4.851,1.425-6.354c0-0.975,0.063-1.102,1.236-2.267  c0.692-0.678,1.341-1.419,1.467-1.631c0.21-0.403,0.188-0.403-0.88-0.043c-1.781,0.636-2.033,0.551-1.152-0.402  c0.649-0.678,1.425-1.907,1.425-2.267c0-0.063-0.314,0.042-0.671,0.233c-0.377,0.212-1.215,0.53-1.844,0.72l-1.131,0.361l-1.027-0.7  c-0.566-0.381-1.361-0.805-1.781-0.932C39.766,21.902,38.131,21.944,37.167,22.283z M33,64C16.432,64,3,50.569,3,34S16.432,4,33,4  s30,13.431,30,30S49.568,64,33,64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:;"/></svg>
+
+    </a>
+
+    
+    <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http://example.org/post/1960034/&amp;title=mongodb%e5%89%af%e6%9c%ac%e9%9b%86%e6%90%ad%e5%bb%ba" class="linkedin no-underline" aria-label="share on LinkedIn">
+      <svg  height="32px"  style="enable-background:new 0 0 65 65;" version="1.1" viewBox="0 0 65 65" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <path d="M50.837,48.137V36.425c0-6.275-3.35-9.195-7.816-9.195  c-3.604,0-5.219,1.983-6.119,3.374V27.71h-6.79c0.09,1.917,0,20.427,0,20.427h6.79V36.729c0-0.609,0.044-1.219,0.224-1.655  c0.49-1.22,1.607-2.483,3.482-2.483c2.458,0,3.44,1.873,3.44,4.618v10.929H50.837z M22.959,24.922c2.367,0,3.842-1.57,3.842-3.531  c-0.044-2.003-1.475-3.528-3.797-3.528s-3.841,1.524-3.841,3.528c0,1.961,1.474,3.531,3.753,3.531H22.959z M34,64  C17.432,64,4,50.568,4,34C4,17.431,17.432,4,34,4s30,13.431,30,30C64,50.568,50.568,64,34,64z M26.354,48.137V27.71h-6.789v20.427  H26.354z" style="fill-rule:evenodd;clip-rule:evenodd;fill:;"/>
+</svg>
+
+    </a>
+  </div>
+
+
+      <h1 class="f1 athelas mt3 mb1">mongodb副本集搭建</h1>
+      
+      
+      <time class="f6 mv4 dib tracked" datetime="2019-06-23T06:44:57Z">June 23, 2019</time>
+
+      
+      
+    </header>
+    <div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="介绍">介绍</h2>
+<p>副本集是mongoDB副本所组成的一个集群，集群中没有特定的主库，主库是选举产生，如果主库down了，会再选举出一台主库</p>
+<p><img src="/images/1960034_1.png" alt=""><!-- raw HTML omitted -->正常状态下拓扑<!-- raw HTML omitted --><img src="/images/1960034_2.png" alt=""><!-- raw HTML omitted -->故障切换过程</p>
+<p>副本集有以下特点：<!-- raw HTML omitted -->1. 最小构成是：primary，secondary，arbiter，一般部署是：primary，2 secondary。<!-- raw HTML omitted -->2. 成员数应该为奇数，如果为偶数的情况下添加arbiter，arbiter不保存数据，只投票。<!-- raw HTML omitted -->3. 最大50 members，但是只能有 7 voting members，其他是non-voting members。
+<!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="部署">部署</h2>
+<p>下载mongod：<a href="https://www.mongodb.com/download-center/community">https://www.mongodb.com/download-center/community</a><!-- raw HTML omitted -->加入到系统路径：chmod +x mongod &amp;&amp; cp mongod /usr/bin/<!-- raw HTML omitted -->创建用户并设置密码： useradd mongod &amp;&amp; passwd mongod<!-- raw HTML omitted -->编辑配置文件  </p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e"># mongod.conf</span>
+
+<span style="color:#75715e"># for documentation of all options, see:</span>
+<span style="color:#75715e">#   http://docs.mongodb.org/manual/reference/configuration-options/</span>
+<span style="color:#75715e"># where to write logging data.</span>
+<span style="color:#f92672">systemLog</span>:
+  <span style="color:#f92672">destination</span>: <span style="color:#ae81ff">file</span>
+  <span style="color:#f92672">logAppend</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/var/log/mongodb/mongod1.log</span>
+<span style="color:#75715e"># Where and how to store data.</span>
+<span style="color:#f92672">storage</span>:
+  <span style="color:#f92672">dbPath</span>: <span style="color:#ae81ff">/var/lib/mongo1</span>
+  <span style="color:#f92672">journal</span>:
+    <span style="color:#f92672">enabled</span>: <span style="color:#66d9ef">true</span>
+<span style="color:#75715e">#  engine:</span>
+<span style="color:#75715e">#  mmapv1:</span>
+<span style="color:#75715e">#  wiredTiger:</span>
+<span style="color:#75715e"># how the process runs</span>
+<span style="color:#f92672">processManagement</span>:
+  <span style="color:#f92672">fork</span>: <span style="color:#66d9ef">true</span>  <span style="color:#75715e"># fork and run in background</span>
+  <span style="color:#f92672">pidFilePath</span>: <span style="color:#ae81ff">/var/run/mongodb/mongod1.pid </span> <span style="color:#75715e"># location of pidfile</span>
+  <span style="color:#f92672">timeZoneInfo</span>: <span style="color:#ae81ff">/usr/share/zoneinfo</span>
+<span style="color:#75715e"># network interfaces</span>
+<span style="color:#75715e"># bindIp默认是127的，需要改成本机地址或者0.0.0.0，以远程连接，端口如果是单机部署，需要区分不同的端口</span>
+<span style="color:#f92672">net</span>:
+  <span style="color:#f92672">port</span>: <span style="color:#ae81ff">27017</span>
+  <span style="color:#f92672">bindIp: 127.0.0.1,172.16.13.44  # Enter 0.0.0.0,:</span>: <span style="color:#ae81ff">to bind to all IPv4 and IPv6 addresses or, alternatively, use the net.bindIpAll setting.</span>
+<span style="color:#75715e">#security:</span>
+<span style="color:#75715e">#  authorization: enabled</span>
+<span style="color:#75715e">#  keyFile: /tmp/key.file</span>
+<span style="color:#75715e">#operationProfiling:</span>
+<span style="color:#75715e">#打开副本集功能</span>
+<span style="color:#f92672">replication</span>:
+  <span style="color:#f92672">replSetName</span>: <span style="color:#e6db74">&#34;rs0&#34;</span>
+<span style="color:#75715e">#sharding:</span>
+<span style="color:#75715e">## Enterprise-Only Options</span>
+<span style="color:#75715e">#auditLog:</span>
+<span style="color:#75715e">#snmp:</span>
+</code></pre></div><p>将mongo添加到系统服务，以便管理   ，vim /usr/lib/systemd/system/mongod1.service</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+<span style="color:#75715e">#单机部署的实例如下</span>
+<span style="color:#f92672">[</span>Unit<span style="color:#f92672">]</span>
+Description<span style="color:#f92672">=</span>MongoDB Database Server
+After<span style="color:#f92672">=</span>network.target
+Documentation<span style="color:#f92672">=</span>https://docs.mongodb.org/manual
+
+<span style="color:#f92672">[</span>Service<span style="color:#f92672">]</span>
+User<span style="color:#f92672">=</span>mongod
+Group<span style="color:#f92672">=</span>mongod
+Environment<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;OPTIONS=-f /etc/mongod1.conf&#34;</span>
+EnvironmentFile<span style="color:#f92672">=</span>-/etc/sysconfig/mongod
+ExecStart<span style="color:#f92672">=</span>/usr/bin/mongod $OPTIONS
+<span style="color:#75715e">#多机部署的话，注意修改这里的配置</span>
+ExecStartPre<span style="color:#f92672">=</span>/usr/bin/mkdir -p /var/run/mongodb1
+ExecStartPre<span style="color:#f92672">=</span>/usr/bin/chown mongod:mongod /var/run/mongodb1
+ExecStartPre<span style="color:#f92672">=</span>/usr/bin/chmod <span style="color:#ae81ff">0755</span> /var/run/mongodb1
+PermissionsStartOnly<span style="color:#f92672">=</span>true
+PIDFile<span style="color:#f92672">=</span>/var/run/mongodb/mongod1.pid
+Type<span style="color:#f92672">=</span>forking
+<span style="color:#75715e"># file size</span>
+LimitFSIZE<span style="color:#f92672">=</span>infinity
+<span style="color:#75715e"># cpu time</span>
+LimitCPU<span style="color:#f92672">=</span>infinity
+<span style="color:#75715e"># virtual memory size</span>
+LimitAS<span style="color:#f92672">=</span>infinity
+<span style="color:#75715e"># open files</span>
+LimitNOFILE<span style="color:#f92672">=</span><span style="color:#ae81ff">64000</span>
+<span style="color:#75715e"># processes/threads</span>
+LimitNPROC<span style="color:#f92672">=</span><span style="color:#ae81ff">64000</span>
+<span style="color:#75715e"># locked memory</span>
+LimitMEMLOCK<span style="color:#f92672">=</span>infinity
+<span style="color:#75715e"># total threads (user+kernel)</span>
+TasksMax<span style="color:#f92672">=</span>infinity
+TasksAccounting<span style="color:#f92672">=</span>false
+<span style="color:#75715e"># Recommended limits for for mongod as specified in</span>
+<span style="color:#75715e"># http://docs.mongodb.org/manual/reference/ulimit/#recommended-settings</span>
+<span style="color:#f92672">[</span>Install<span style="color:#f92672">]</span>
+WantedBy<span style="color:#f92672">=</span>multi-user.target
+</code></pre></div><p>启动服务， systemctl  start mongod。然后连接服务器，<code>mongo --port 27019</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">use admin
+rs.initiate<span style="color:#f92672">()</span>
+<span style="color:#75715e">#添加副本集成员</span>
+rs.add<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;172.16.13.xx:27018&#39;</span><span style="color:#f92672">)</span>
+<span style="color:#75715e">#删除节点</span>
+rs.remove<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;172.16.13.xx:27018&#39;</span><span style="color:#f92672">)</span>
+<span style="color:#75715e">#故障切换，主动关闭主库</span>
 use admin
-db.shutdownServer<span style=color:#f92672>()</span>
-</code></pre></div><p></p><h2 id=安全认证>安全认证</h2><p>在生产环境，建议配置至少一个安全认证方式，我这里采用keyfile的认证方式在配置文件添加安全选项配置  </p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e>#创建一个秘钥</span>
-<span style=color:#ae81ff>openssl genrsa -out ~/key.file 1024</span>
-<span style=color:#75715e>#mongo只识别密钥，删除生成文件的首行和尾行</span>
-<span style=color:#75715e>#修改权限</span>
-<span style=color:#ae81ff>chmod  600 ~/key.file&amp;&amp;chown  mongod.mongod /tmp/key.file</span>
-<span style=color:#75715e>#新增配置</span>
-<span style=color:#f92672>security</span>:
-   <span style=color:#f92672>keyFile</span>: <span style=color:#ae81ff>xxx.key</span>
-   <span style=color:#f92672>clusterAuthMode</span>: <span style=color:#ae81ff>keyFile</span>
-   <span style=color:#f92672>authorization</span>: <span style=color:#ae81ff>enabled</span> <span style=color:#75715e>#由于开启验证必须添加用户</span>
-<span style=color:#75715e>#创建用户</span>
+db.shutdownServer<span style="color:#f92672">()</span>
+</code></pre></div><p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<h2 id="安全认证">安全认证</h2>
+<p>在生产环境，建议配置至少一个安全认证方式，我这里采用keyfile的认证方式<!-- raw HTML omitted -->在配置文件添加安全选项配置  </p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">#创建一个秘钥</span>
+<span style="color:#ae81ff">openssl genrsa -out ~/key.file 1024</span>
+<span style="color:#75715e">#mongo只识别密钥，删除生成文件的首行和尾行</span>
+<span style="color:#75715e">#修改权限</span>
+<span style="color:#ae81ff">chmod  600 ~/key.file&amp;&amp;chown  mongod.mongod /tmp/key.file</span>
+<span style="color:#75715e">#新增配置</span>
+<span style="color:#f92672">security</span>:
+   <span style="color:#f92672">keyFile</span>: <span style="color:#ae81ff">xxx.key</span>
+   <span style="color:#f92672">clusterAuthMode</span>: <span style="color:#ae81ff">keyFile</span>
+   <span style="color:#f92672">authorization</span>: <span style="color:#ae81ff">enabled</span> <span style="color:#75715e">#由于开启验证必须添加用户</span>
+<span style="color:#75715e">#创建用户</span>
 
-<span style=color:#ae81ff>use admin</span>
-<span style=color:#ae81ff>db.createUser( {user: &#34;cluster&#34;,pwd: &#34;cluster&#34;,roles: [ { role: &#34;clusterAdmin&#34;, db: &#34;admin&#34; } ]})</span>
-<span style=color:#ae81ff>db.createUser( {user: &#34;admin&#34;,pwd: &#34;123456&#34;,roles: [ { role: &#34;userAdminAnyDatabase&#34;, db: &#34;admin&#34; } ]})</span>
-<span style=color:#75715e>#查看用户的角色和拥有的权限</span>
-<span style=color:#ae81ff>db.getUser(&#39;cluster&#39;)</span>
-<span style=color:#ae81ff>db.getRole(&#34;clusterAdmin&#34;,{ showPrivileges: true } )</span>
-<span style=color:#75715e>#授予新的角色</span>
-<span style=color:#ae81ff>use admin </span>
-<span style=color:#ae81ff>db.grantRolesToUser(</span>
-    <span style=color:#e6db74>&#34;cluster&#34;</span>,
+<span style="color:#ae81ff">use admin</span>
+<span style="color:#ae81ff">db.createUser( {user: &#34;cluster&#34;,pwd: &#34;cluster&#34;,roles: [ { role: &#34;clusterAdmin&#34;, db: &#34;admin&#34; } ]})</span>
+<span style="color:#ae81ff">db.createUser( {user: &#34;admin&#34;,pwd: &#34;123456&#34;,roles: [ { role: &#34;userAdminAnyDatabase&#34;, db: &#34;admin&#34; } ]})</span>
+<span style="color:#75715e">#查看用户的角色和拥有的权限</span>
+<span style="color:#ae81ff">db.getUser(&#39;cluster&#39;)</span>
+<span style="color:#ae81ff">db.getRole(&#34;clusterAdmin&#34;,{ showPrivileges: true } )</span>
+<span style="color:#75715e">#授予新的角色</span>
+<span style="color:#ae81ff">use admin </span>
+<span style="color:#ae81ff">db.grantRolesToUser(</span>
+    <span style="color:#e6db74">&#34;cluster&#34;</span>,
     [
-      { <span style=color:#f92672>role</span>: <span style=color:#e6db74>&#34;clusterAdmin&#34;</span><span style=color:#f92672>, db</span>: <span style=color:#e6db74>&#34;admin&#34;</span> }
+      { <span style="color:#f92672">role</span>: <span style="color:#e6db74">&#34;clusterAdmin&#34;</span><span style="color:#f92672">, db</span>: <span style="color:#e6db74">&#34;admin&#34;</span> }
     ]
-<span style=color:#ae81ff>)</span>
-<span style=color:#75715e>#撤销角色</span>
-<span style=color:#ae81ff>db.revokeRolesFromUser(</span>
-    <span style=color:#e6db74>&#34;cluster&#34;</span>,
+<span style="color:#ae81ff">)</span>
+<span style="color:#75715e">#撤销角色</span>
+<span style="color:#ae81ff">db.revokeRolesFromUser(</span>
+    <span style="color:#e6db74">&#34;cluster&#34;</span>,
     [
-      { <span style=color:#f92672>role</span>: <span style=color:#e6db74>&#34;userAdminAnyDatabase&#34;</span><span style=color:#f92672>, db</span>: <span style=color:#e6db74>&#34;admin&#34;</span> }
+      { <span style="color:#f92672">role</span>: <span style="color:#e6db74">&#34;userAdminAnyDatabase&#34;</span><span style="color:#f92672">, db</span>: <span style="color:#e6db74">&#34;admin&#34;</span> }
     ]
-<span style=color:#ae81ff>)</span>
-</code></pre></div><ul class=pa0></ul><div class="mt6 instapaper_ignoref"></div></div><aside class="w-30-l mt6-l"></aside></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>
+<span style="color:#ae81ff">)</span>
+</code></pre></div><ul class="pa0">
+  
+</ul>
+<div class="mt6 instapaper_ignoref">
+      
+      
+      </div>
+    </div>
+
+    <aside class="w-30-l mt6-l">
+
+
+
+
+</aside>
+
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="http://example.org/" >
+    &copy;  My New Hugo Site 2021 
+  </a>
+    <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+  </div>
+</footer>
+
+  </body>
+</html>

@@ -1,9 +1,376 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><link href=dingtalk.pub/post/index.xml rel=alternate type=application/rss+xml title=snoopy><link href=dingtalk.pub/post/index.xml rel=feed type=application/rss+xml title=snoopy><meta property="og:title" content="Posts"><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="dingtalk.pub/post/"><meta itemprop=name content="Posts"><meta itemprop=description content><meta name=twitter:card content="summary"><meta name=twitter:title content="Posts"><meta name=twitter:description content></head><body class="ma0 avenir bg-near-white"><header><div class="pb3-m pb6-l bg-black"><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav><div class="tc-l pv3 ph3 ph4-ns"><h1 class="f2 f-subheadline-l fw2 light-silver mb0 lh-title">Posts</h1></div></div></header><main class=pb7 role=main><article class="pa3 pa4-ns nested-copy-line-height nested-img"><section class="cf ph3 ph5-l pv3 pv4-l f4 tc-l center measure-wide lh-copy mid-gray"></section><aside class="flex-ns flex-wrap justify-around mt5"><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>December 4, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/2055568/ class="link black dim">k8s使用自定义的指标进行hpa</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">介绍 Horizontal Pod Autoscaling，简称HPA，是Kubernetes中实现POD水平自动伸缩的功能。为什么要水平而不叫垂直, 那是因为自动扩展主要分为两种:水平扩展(scale out)，针对于实例数目的增减垂直扩展(scal up)，即单个实例可以使用的资源的增减, 比如增加cpu和增大内存而HPA属于前者。它可以根据CPU使用率或应用自定义metrics自动扩展Pod数量(支持 replication controller、deployment 和 replica set) 实施过程 部署prometheus 自定义的指标需要从集群中抓取，而这些指标的抓取需要prometheus的支持，这里推荐一个最佳实践，基于prometheus-operator的全栈k8s监控项目： kube-prometheus ,部署该项目后，集群将拥有全栈的监控功能，为下一步，部署自定义的指标做准备 部署prometheus-adapter 该组件，提供了自定义指标的功能，用于将prometheus中的指标抓取为api资源，以便在hpa的定义中使用抓取到的metrics，官方推荐的安装方式是这样的：#如果所在环境全局翻墙的话，这个办法倒是挺好的 $ helm install --name my-release stable/prometheus-adapter 但是，由于国内环境的原因，我们可以把该资源导出为yaml文件，以便在本地部署或修改；在能够通外网的vps上操作一波#全栈的helm工具，需要翻墙，在本地使用的话，我们可以仅仅初始化helm客户端 helm init --client-only #将模板下载到本地 helm fetch --untar --untardir . stable/prometheus-adapter #使用模板生成配置文件 helm template prometheus-adapter --set prometheus.url=http://prometheus.monitoring.svc > prometheus-adapter.yaml #这样，就生成了本地配置文件prometheus-adapter.yaml，image，镜像字段必须要修改为国内可以下载到的；修改其中的字段或者其他值，可以参考文末链接 使用生成的yaml本地文件，在墙内的服务器上执行kubectl apply -f prometheus-adapter.yaml #查看自定义的指标是否生效 kubectl get --raw "/apis/custom.metrics.k8s.io/" | jq kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/" | jq #如果有数据返回的话，就已经可以使用了 参考：Prometheus Adapter</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>December 3, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/1530017/ class="link black dim">LVM扩容实践</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景 在虚拟化平台上，为了方便资源分配，磁盘和内存都是按需分配的，内存分配后可以直接生效，磁盘扩容需要配置一定的操作实现扩容lvm LVM介绍 图中顶部，首先是实际的物理磁盘及其划分的分区和其上的物理卷（PV）。一个或多个物理卷可以用来创建卷组（VG）。然后基于卷组可以创建逻辑卷（LV）。只要在卷组中有可用空间，就可以随心所欲的创建逻辑卷。文件系统就是在逻辑卷上创建的，然后可以在操作系统挂载和访问。 实践  传统的LVM扩容方法，是通过添加新的磁盘或者磁盘分区来建立新的PV，再将PV加入到VG中，从而扩大VG空间，再对相关的LV进行扩容，最后增加文件系统空间完成整个扩容工作。这种方法比较适合使用本地存储的物理机，因为磁盘空间都是固定的，只能通过增加硬盘来增加磁盘空间，这种方法可以在线完成，无需停机重启。但扩容多次后，VG中会存在多个PV，磁盘逻辑结构变得复杂，容易增加日后维护存储和磁盘分区布局的难度 添加硬盘->将新硬盘做成pv->将pv加入vg->让lv使用vg新增的空间->刷新文件系统，使得lv的扩容生效 具体操作如下 方案一 #1.查看分区分区  fdisk -l #2.创建物理卷  pvcreat /dev/sdb1 #3.查看卷组名称及使用情况 vgdisplay #4.将物理卷扩展到卷组  vgextend centos /dev/sdb (此处‘centos’是卷组名称) #5.查看要扩展的逻辑卷 lvdisplay #得到要扩展的lv为 /dev/centos/root #6.将卷组中空闲空间扩展到 /  #lvextend -l +100%FREE /dev/centos/root #lvextend -L +50G /dev/ubuntu-vg/ubuntu-lv 6.刷新文件系统是扩容生效，根据文件系统的不同命令不同 df -hT 查看文件系统类型 #ext4使用如下命令 e2fsck -f /dev/centos/root resize2fs /dev/centos/root #xfs使用如下命令 xfs_growfs /dev/centos/root 方案二 在方案一上面的改变是，不直接增加新的硬盘；由于在虚拟化环境中可以直接增加磁盘容量，所以这里选择直接增加磁盘容量，而不是添加硬盘，个人认为在虚拟化环境下更方便管理 修改原硬盘大小->在原磁盘新建分区->将新分区做成pv->将pv加入vg->让lv使用vg新增的空间->刷新文件系统，使得lv的扩容生效具体操作如下 #1.直接编辑虚拟机资源，在原硬盘上，修改硬盘容量到目标值 #2.重新扫描硬件，使系统识别到变化 echo '1' > /sys/class/scsi_disk/0\:0\:0\:0/device/rescan echo '1' > /sys/class/scsi_disk/0\:0\:1\:0/device/rescan #3.查看新的大小是否被识别 fdisk -l #4.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>November 23, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/16367432/ class="link black dim">基于helm的operators SDK</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">先决条件 安装operator sdk及其必备组件。具有Kubernetes v1.16.0+集群。具有群集管理权限的用户。 安装 brew install operator-sdk 快速步骤 创建项目 创建并更改为项目的目录。然后使用Helm插件调用operator-sdk init来初始化基础项目布局：
-mkdir nginx-operator cd nginx-operator operator-sdk init --plugins=helm #模板，会自动创建chart # operator-sdk init --plugins=helm --domain=com --group=example --version=v1alpha1 --kind=Nginx # Use an existing chart # 创建一个 API 使用Helm的内置的chart 模板 创建一个简单的nginx API（来自helm create）：
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>My New Hugo Site</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1">
+    <meta name="description" content="">
+    <meta name="generator" content="Hugo 0.83.1" />
+    
+    
+      <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+    
+
+    
+
+  
+  
+    <link rel="stylesheet" href="/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css" >
+  
+
+
+
+
+    
+      
+
+    
+
+    
+    
+      <link href="/post/index.xml" rel="alternate" type="application/rss+xml" title="My New Hugo Site" />
+      <link href="/post/index.xml" rel="feed" type="application/rss+xml" title="My New Hugo Site" />
+      
+    
+    
+    <meta property="og:title" content="Posts" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://example.org/post/" />
+
+<meta itemprop="name" content="Posts">
+<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Posts"/>
+<meta name="twitter:description" content=""/>
+
+	
+  </head>
+
+  <body class="ma0 avenir bg-near-white">
+
+    
+
+  <header>
+    <div class="pb3-m pb6-l bg-black">
+      <nav class="pv3 ph3 ph4-ns" role="navigation">
+  <div class="flex-l justify-between items-center center">
+    <a href="/" class="f3 fw2 hover-white no-underline white-90 dib">
+      
+        My New Hugo Site
+      
+    </a>
+    <div class="flex-l items-center">
+      
+
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+  </div>
+</nav>
+
+      <div class="tc-l pv3 ph3 ph4-ns">
+        <h1 class="f2 f-subheadline-l fw2 light-silver mb0 lh-title">
+          Posts
+        </h1>
+        
+      </div>
+    </div>
+  </header>
+
+
+    <main class="pb7" role="main">
+      
+
+  <article class="pa3 pa4-ns nested-copy-line-height nested-img">
+    <section class="cf ph3 ph5-l pv3 pv4-l f4 tc-l center measure-wide lh-copy mid-gray">
+      
+    </section>
+    <aside class="flex-ns flex-wrap justify-around mt5">
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        December 4, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/2055568/" class="link black dim">
+        k8s使用自定义的指标进行hpa
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      介绍 Horizontal Pod Autoscaling，简称HPA，是Kubernetes中实现POD水平自动伸缩的功能。为什么要水平而不叫垂直, 那是因为自动扩展主要分为两种:水平扩展(scale out)，针对于实例数目的增减垂直扩展(scal up)，即单个实例可以使用的资源的增减, 比如增加cpu和增大内存而HPA属于前者。它可以根据CPU使用率或应用自定义metrics自动扩展Pod数量(支持 replication controller、deployment 和 replica set) 实施过程 部署prometheus 自定义的指标需要从集群中抓取，而这些指标的抓取需要prometheus的支持，这里推荐一个最佳实践，基于prometheus-operator的全栈k8s监控项目： kube-prometheus ,部署该项目后，集群将拥有全栈的监控功能，为下一步，部署自定义的指标做准备 部署prometheus-adapter 该组件，提供了自定义指标的功能，用于将prometheus中的指标抓取为api资源，以便在hpa的定义中使用抓取到的metrics，官方推荐的安装方式是这样的：#如果所在环境全局翻墙的话，这个办法倒是挺好的 $ helm install --name my-release stable/prometheus-adapter 但是，由于国内环境的原因，我们可以把该资源导出为yaml文件，以便在本地部署或修改；在能够通外网的vps上操作一波#全栈的helm工具，需要翻墙，在本地使用的话，我们可以仅仅初始化helm客户端 helm init --client-only #将模板下载到本地 helm fetch --untar --untardir . stable/prometheus-adapter #使用模板生成配置文件 helm template prometheus-adapter --set prometheus.url=http://prometheus.monitoring.svc &gt; prometheus-adapter.yaml #这样，就生成了本地配置文件prometheus-adapter.yaml，image，镜像字段必须要修改为国内可以下载到的；修改其中的字段或者其他值，可以参考文末链接 使用生成的yaml本地文件，在墙内的服务器上执行kubectl apply -f prometheus-adapter.yaml #查看自定义的指标是否生效 kubectl get --raw &#34;/apis/custom.metrics.k8s.io/&#34; | jq kubectl get --raw &#34;/apis/custom.metrics.k8s.io/v1beta1/&#34; | jq #如果有数据返回的话，就已经可以使用了 参考：Prometheus Adapter
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        December 3, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/1530017/" class="link black dim">
+        LVM扩容实践
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景 在虚拟化平台上，为了方便资源分配，磁盘和内存都是按需分配的，内存分配后可以直接生效，磁盘扩容需要配置一定的操作实现扩容lvm LVM介绍 图中顶部，首先是实际的物理磁盘及其划分的分区和其上的物理卷（PV）。一个或多个物理卷可以用来创建卷组（VG）。然后基于卷组可以创建逻辑卷（LV）。只要在卷组中有可用空间，就可以随心所欲的创建逻辑卷。文件系统就是在逻辑卷上创建的，然后可以在操作系统挂载和访问。 实践  传统的LVM扩容方法，是通过添加新的磁盘或者磁盘分区来建立新的PV，再将PV加入到VG中，从而扩大VG空间，再对相关的LV进行扩容，最后增加文件系统空间完成整个扩容工作。这种方法比较适合使用本地存储的物理机，因为磁盘空间都是固定的，只能通过增加硬盘来增加磁盘空间，这种方法可以在线完成，无需停机重启。但扩容多次后，VG中会存在多个PV，磁盘逻辑结构变得复杂，容易增加日后维护存储和磁盘分区布局的难度 添加硬盘-&gt;将新硬盘做成pv-&gt;将pv加入vg-&gt;让lv使用vg新增的空间-&gt;刷新文件系统，使得lv的扩容生效 具体操作如下 方案一 #1.查看分区分区  fdisk -l #2.创建物理卷  pvcreat /dev/sdb1 #3.查看卷组名称及使用情况 vgdisplay #4.将物理卷扩展到卷组  vgextend centos /dev/sdb (此处‘centos’是卷组名称) #5.查看要扩展的逻辑卷  lvdisplay #得到要扩展的lv为 /dev/centos/root #6.将卷组中空闲空间扩展到 /  #lvextend -l +100%FREE /dev/centos/root #lvextend -L +50G /dev/ubuntu-vg/ubuntu-lv 6.刷新文件系统是扩容生效，根据文件系统的不同命令不同 df -hT 查看文件系统类型 #ext4使用如下命令 e2fsck -f /dev/centos/root resize2fs /dev/centos/root #xfs使用如下命令  xfs_growfs /dev/centos/root 方案二 在方案一上面的改变是，不直接增加新的硬盘；由于在虚拟化环境中可以直接增加磁盘容量，所以这里选择直接增加磁盘容量，而不是添加硬盘，个人认为在虚拟化环境下更方便管理 修改原硬盘大小-&gt;在原磁盘新建分区-&gt;将新分区做成pv-&gt;将pv加入vg-&gt;让lv使用vg新增的空间-&gt;刷新文件系统，使得lv的扩容生效具体操作如下 #1.直接编辑虚拟机资源，在原硬盘上，修改硬盘容量到目标值 #2.重新扫描硬件，使系统识别到变化 echo '1' &gt; /sys/class/scsi_disk/0\:0\:0\:0/device/rescan echo '1' &gt; /sys/class/scsi_disk/0\:0\:1\:0/device/rescan #3.查看新的大小是否被识别 fdisk -l #4.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        November 23, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/16367432/" class="link black dim">
+        基于helm的operators SDK
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      先决条件 安装operator sdk及其必备组件。具有Kubernetes v1.16.0+集群。具有群集管理权限的用户。 安装 brew install operator-sdk 快速步骤 创建项目 创建并更改为项目的目录。然后使用Helm插件调用operator-sdk init来初始化基础项目布局：
+mkdir nginx-operator cd nginx-operator operator-sdk init --plugins=helm #模板，会自动创建chart # operator-sdk init --plugins=helm --domain=com --group=example --version=v1alpha1 --kind=Nginx # Use an existing chart #  创建一个 API 使用Helm的内置的chart 模板 创建一个简单的nginx API（来自helm create）：
 operator-sdk create api --group demo --version v1 --kind Nginx Build and push the operator image 使用内置的Makefile目标来构建和推送operator。调用make时，需要定义IMG：
-make docker-build docker-push IMG=imdingtalk/nginx-operator:0.1 运行 operator # Install CRDs into a cluster nginx-operator$make install /usr/local/bin/kustomize build config/crd | kubectl apply -f - customresourcedefinition.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>November 23, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/6758741/ class="link black dim">✔️ go,一天一个小碧池</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">How to reset and retrieve forgotten Harbor admin password (76289) https://kb.vmware.com/s/article/76289 device is busy 的处理方法 [root@biao yum.repos.d]# umount /mnt/cdrom/ umount: /mnt/cdrom: device is busy. [root@biao yum.repos.d]# fuser -m /mnt/cdrom/ ##查看在用的用户 /mnt/cdrom/: 1332c 4444c //占用进程pid,找到这个kill掉就欧克 ##或者查看后直接kill [root@biao yum.repos.d]fuser -m -k /mnt/cdrom/ TCP: time wait bucket table overflow #引起该现象的原因是服务器tcp的连接数太多，超出了内核定义的最大数 #vim /etc/sysctl.conf net.ipv4.tcp_max_tw_buckets = 20000# 过大也可能拖死服务器，关键还是要找出大量TW的原因，从根本上处理 # sysctl -p #一般原因为客户端没有主动关闭连接 #查看当前tcp的连接状态 [root@node1 ~]# netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}' ESTABLISHED 181 TIME_WAIT 12 SYN_SENT 3 #找出80端口tcp请求最高的5个IP [root@node1 ~]# netstat -anlp | grep 80 | grep tcp | awk '{print $5}' | awk -F: '{print $1}' | sort | uniq -c | sort -nr | head -n5 6 127.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>November 16, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/16022662/ class="link black dim">集群升级导致helm无法直接升级的问题处理</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景 之前一直正常在用的测试环境，k8s版本升级，使用helm upgrade升级应用，报错
-Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest: unable to recognize "": no matches for kind "Deployment" in version "apps/v1beta2" helm.go:75: [debug] unable to recognize "": no matches for kind "Deployment" in version "apps/v1beta2" 处理 https://helm.sh/docs/topics/kubernetes_apis/
-由于新版本集群，弃用了部分api，所以helm对应的需要更新模板，并且更新现有的manifest
-更新模板，更新现有的helm模板中的api版本 使用新的模板更新应用 helm upgrade ... 依旧会报错，需要更新现有的在运行的manifest
-更新现有在运行的manifest中的api版本,直接使用helm的插件更新 helm plugin install https://github.com/hickeyma/helm-mapkubeapis helm get manifest RELEASE helm mapkubeapis RELEASE 再次使用 helm upgrade .</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>October 22, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/14758613/ class="link black dim">logging-operator</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">项目地址：https://github.com/banzaicloud/logging-operator Overview Architecture You can define outputs (destinations where you want to send your log messages, for example, Elasticsearch, or and Amazon S3 bucket), and flows that use filters and selectors to route log messages to the appropriate outputs. You can also define cluster-wide outputs and flows, for example, to use a centralized output that namespaced users cannot modify.You can configure the Logging operator using the following Custom Resource Descriptions.</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>September 22, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/13509091/ class="link black dim">postgres</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">备份 #直接备份 DATE=`date +%Y-%m-%d` for w in `echo reach_from_ooredoo_0825`; do pg_dump ${w} |gzip > /backup/$DATE-${w}.gz;done #压缩备份 DATE=`date +%Y-%m-%d` for w in `echo ac db1 db2 `; do pg_dump -U target -h xxx.com ${w} | gzip > /backup//$DATE-${w}.gz; done 恢复 #压缩文件恢复 nohup gunzip -c reach.gz | psql -U postgres -h xxx &lt;dbname> > nohup.log 2>&1 & #直接恢复 psql -U postgres -h xxx -f xxx.sql -d &lt;dbname> --set ON_ERROR_STOP=ON 其他 #查看数据库size select pg_size_pretty(pg_database_size('dbname'));</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>September 3, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/12647806/ class="link black dim">kubectl 无法自动补全之痛</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">背景 莫名的，kubectl无法自动补全了，总是报错没有啥bb函数，网上各种搜罗，都没有找到解决的办法，重装bash-complete多次无果，奇怪得很，万般无奈。。始终报错bash: completion: function __start_kubectl' not found·最终还是解决了 helm3$kubectl version Client Version: version.Info{Major:"1", Minor:"16", GitVersion:"v1.16.3", GitCommit:"b3cbbae08ec52a7fc73d334838e18d17e8512749", GitTreeState:"clean", BuildDate:"2019-11-13T11:23:11Z", GoVersion:"go1.12.12", Compiler:"gc", Platform:"darwin/amd64"} Server Version: version.Info{Major:"1", Minor:"15+", GitVersion:"v1.15.12-gke.9", GitCommit:"0bfb4b7e4478e9ccb67f3c55ce3a5eb20d3bb586", GitTreeState:"clean", BuildDate:"2020-06-26T16:49:38Z", GoVersion:"go1.12.17b4", Compiler:"gc", Platform:"linux/amd64"} 根据kubectl的自带帮助操作了一把，就可以了，官方文档不是这么写的，有点小坑
-source &lt;(kubectl completion bash) ## Write bash completion code to a file and source if from .bash_profile kubectl completion bash > ~/.kube/completion.bash.inc printf " # Kubectl shell completion source '$HOME/.kube/completion.bash.inc' " >> $HOME/.bash_profile source $HOME/.bash_profile</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>August 4, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/2796357/ class="link black dim">嗯~每天少玩一会手机</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">大概每天更新一下吧 我觉得，每天手机亮屏的时间不超过一个小时，才算是正常的呀~</div></div></div><div class="relative w-100 w-30-l mb4 bg-white"><div class="mb3 pa4 mid-gray overflow-hidden"><div class=f6>August 4, 2020</div><h1 class="f3 near-black"><a href=dingtalk.pub/post/5928345/ class="link black dim">部署 GlusterFS 存储服务端</a></h1><div class="nested-links f5 lh-copy nested-copy-line-height">介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi.</div></div></div></aside><ul class=pagination><li class=page-item><a href=dingtalk.pub/post/ class=page-link aria-label=First><span aria-hidden=true>&#171;&#171;</span></a></li><li class=page-item><a href=dingtalk.pub/post/ class=page-link aria-label=Previous><span aria-hidden=true>&#171;</span></a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/>1</a></li><li class="page-item active"><a class=page-link href=dingtalk.pub/post/page/2/>2</a></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/3/>3</a></li><li class="page-item disabled"><span aria-hidden=true>&nbsp;&mldr;&nbsp;</span></li><li class=page-item><a class=page-link href=dingtalk.pub/post/page/8/>8</a></li><li class=page-item><a href=dingtalk.pub/post/page/3/ class=page-link aria-label=Next><span aria-hidden=true>&#187;</span></a></li><li class=page-item><a href=dingtalk.pub/post/page/8/ class=page-link aria-label=Last><span aria-hidden=true>&#187;&#187;</span></a></li></ul></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>
+make docker-build docker-push IMG=imdingtalk/nginx-operator:0.1 运行 operator # Install CRDs into a cluster nginx-operator$make install /usr/local/bin/kustomize build config/crd | kubectl apply -f - customresourcedefinition.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        November 23, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/6758741/" class="link black dim">
+        ✔️ go,一天一个小碧池
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      How to reset and retrieve forgotten Harbor admin password (76289) https://kb.vmware.com/s/article/76289 device is busy 的处理方法 [root@biao yum.repos.d]# umount /mnt/cdrom/ umount: /mnt/cdrom: device is busy. [root@biao yum.repos.d]# fuser -m /mnt/cdrom/ ##查看在用的用户 /mnt/cdrom/: 1332c 4444c //占用进程pid,找到这个kill掉就欧克 ##或者查看后直接kill  [root@biao yum.repos.d]fuser -m -k /mnt/cdrom/ TCP: time wait bucket table overflow #引起该现象的原因是服务器tcp的连接数太多，超出了内核定义的最大数 #vim /etc/sysctl.conf net.ipv4.tcp_max_tw_buckets = 20000# 过大也可能拖死服务器，关键还是要找出大量TW的原因，从根本上处理 # sysctl -p #一般原因为客户端没有主动关闭连接  #查看当前tcp的连接状态 [root@node1 ~]# netstat -n | awk &#39;/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}&#39; ESTABLISHED 181 TIME_WAIT 12 SYN_SENT 3 #找出80端口tcp请求最高的5个IP [root@node1 ~]# netstat -anlp | grep 80 | grep tcp | awk &#39;{print $5}&#39; | awk -F: &#39;{print $1}&#39; | sort | uniq -c | sort -nr | head -n5 6 127.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        November 16, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/16022662/" class="link black dim">
+        集群升级导致helm无法直接升级的问题处理
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景 之前一直正常在用的测试环境，k8s版本升级，使用helm upgrade升级应用，报错
+Error: UPGRADE FAILED: unable to build kubernetes objects from current release manifest: unable to recognize &#34;&#34;: no matches for kind &#34;Deployment&#34; in version &#34;apps/v1beta2&#34; helm.go:75: [debug] unable to recognize &#34;&#34;: no matches for kind &#34;Deployment&#34; in version &#34;apps/v1beta2&#34; 处理  https://helm.sh/docs/topics/kubernetes_apis/
+ 由于新版本集群，弃用了部分api，所以helm对应的需要更新模板，并且更新现有的manifest
+ 更新模板，更新现有的helm模板中的api版本 使用新的模板更新应用  helm upgrade ... 依旧会报错，需要更新现有的在运行的manifest
+更新现有在运行的manifest中的api版本,直接使用helm的插件更新  helm plugin install https://github.com/hickeyma/helm-mapkubeapis helm get manifest RELEASE helm mapkubeapis RELEASE 再次使用 helm upgrade .
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        October 22, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/14758613/" class="link black dim">
+        logging-operator
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      项目地址：https://github.com/banzaicloud/logging-operator  Overview  Architecture You can define outputs (destinations where you want to send your log messages, for example, Elasticsearch, or and Amazon S3 bucket), and flows that use filters and selectors to route log messages to the appropriate outputs. You can also define cluster-wide outputs and flows, for example, to use a centralized output that namespaced users cannot modify.You can configure the Logging operator using the following Custom Resource Descriptions.
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        September 22, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/13509091/" class="link black dim">
+        postgres
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      备份 #直接备份 DATE=`date +%Y-%m-%d` for w in `echo reach_from_ooredoo_0825`; do pg_dump ${w} |gzip &gt; /backup/$DATE-${w}.gz;done #压缩备份 DATE=`date +%Y-%m-%d` for w in `echo ac db1 db2 `; do pg_dump -U target -h xxx.com ${w} | gzip &gt; /backup//$DATE-${w}.gz; done 恢复 #压缩文件恢复 nohup gunzip -c reach.gz | psql -U postgres -h xxx &lt;dbname&gt; &gt; nohup.log 2&gt;&amp;1 &amp;  #直接恢复 psql -U postgres -h xxx -f xxx.sql -d &lt;dbname&gt; --set ON_ERROR_STOP=ON  其他 #查看数据库size select pg_size_pretty(pg_database_size(&#39;dbname&#39;)); 
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        September 3, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/12647806/" class="link black dim">
+        kubectl 无法自动补全之痛
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      背景 莫名的，kubectl无法自动补全了，总是报错没有啥bb函数，网上各种搜罗，都没有找到解决的办法，重装bash-complete多次无果，奇怪得很，万般无奈。。始终报错bash: completion: function __start_kubectl' not found·最终还是解决了 helm3$kubectl version Client Version: version.Info{Major:&#34;1&#34;, Minor:&#34;16&#34;, GitVersion:&#34;v1.16.3&#34;, GitCommit:&#34;b3cbbae08ec52a7fc73d334838e18d17e8512749&#34;, GitTreeState:&#34;clean&#34;, BuildDate:&#34;2019-11-13T11:23:11Z&#34;, GoVersion:&#34;go1.12.12&#34;, Compiler:&#34;gc&#34;, Platform:&#34;darwin/amd64&#34;} Server Version: version.Info{Major:&#34;1&#34;, Minor:&#34;15+&#34;, GitVersion:&#34;v1.15.12-gke.9&#34;, GitCommit:&#34;0bfb4b7e4478e9ccb67f3c55ce3a5eb20d3bb586&#34;, GitTreeState:&#34;clean&#34;, BuildDate:&#34;2020-06-26T16:49:38Z&#34;, GoVersion:&#34;go1.12.17b4&#34;, Compiler:&#34;gc&#34;, Platform:&#34;linux/amd64&#34;} 根据kubectl的自带帮助操作了一把，就可以了，官方文档不是这么写的，有点小坑
+source &lt;(kubectl completion bash) ## Write bash completion code to a file and source if from .bash_profile kubectl completion bash &gt; ~/.kube/completion.bash.inc printf &#34; # Kubectl shell completion source &#39;$HOME/.kube/completion.bash.inc&#39; &#34; &gt;&gt; $HOME/.bash_profile source $HOME/.bash_profile 
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        August 4, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/2796357/" class="link black dim">
+        嗯~每天少玩一会手机
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      大概每天更新一下吧 我觉得，每天手机亮屏的时间不超过一个小时，才算是正常的呀~
+    </div>
+  </div>
+
+        </div>
+      
+        <div class="relative w-100 w-30-l mb4 bg-white">
+          
+            <div class="mb3 pa4 mid-gray overflow-hidden">
+    
+      <div class="f6">
+        August 4, 2020
+      </div>
+    
+    <h1 class="f3 near-black">
+      <a href="http://example.org/post/5928345/" class="link black dim">
+        部署 GlusterFS 存储服务端
+      </a>
+    </h1>
+    <div class="nested-links f5 lh-copy nested-copy-line-height">
+      介绍 GlusterFS 是一个开源的分布式文件系统，本指南将介绍如何在 centos系统部署一个节点数为 3 的 GlusterFS 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。正式环境搭建 GlusterFS 集群请参考 是一个开源的分布式文件系统，本指南将介绍如何在 Ubuntu 系统部署一个节点数为 2 的 GlusterFS (v3.12.12) 存储服务端集群和 Heketi，Heketi 用来管理 GlusterFS，并提供 RESTful API 接口供 Kubernetes 调用。本指南仅供测试 KubeSphere 存储服务端的搭建，正式环境搭建 GlusterFS 集群请参考 GlusterFS 官方网站，搭建 Heketi 请参考 官方文档。安装 #安装源 yum install centos-release-gluster #安装GlusterFS yum install glusterfs-server #启动GlusterFS管理守护程序 systemctl enable glusterd systemctl start glusterd #配置信任池 #在server1上执行 gluster peer probe server2 #在server2上执行 gluster peer probe server1 #至此，集群已经完成 #这里可以手动测试 #设置GlusterFS卷 mkdir /bricks/brick1/gv0 gluster volume create gv0 replica 2 server1:/bricks/brick1/gv0 server2:/bricks/brick1/gv0 gluster volume start gv0 gluster volume info 测试  mount -t glusterfs server1:/gv0 /mnt for i in `seq -w 1 100`; do cp -rp /var/log/messages /mnt/copy-test-$i; done ls -lA /mnt | wc -l ls -lA /bricks/brick1/gv0 heketi  安装和初始化 #安装 [root@node1 heketi]# yum install heketi # heketi配置文件 /etc/heketi/heketi.
+    </div>
+  </div>
+
+        </div>
+      
+    </aside>
+    
+<ul class="pagination">
+  <li class="page-item">
+    <a href="/post/" class="page-link" aria-label="First"><span aria-hidden="true">&laquo;&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/post/" class="page-link" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/">1</a>
+  </li>
+  <li class="page-item active">
+    <a class="page-link" href="/post/page/2/">2</a>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/3/">3</a>
+  </li>
+  <li class="page-item disabled">
+    <span aria-hidden="true">&nbsp;&hellip;&nbsp;</span>
+  </li>
+  <li class="page-item">
+    <a class="page-link" href="/post/page/8/">8</a>
+  </li>
+  <li class="page-item">
+    <a href="/post/page/3/" class="page-link" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>
+  </li>
+  <li class="page-item">
+    <a href="/post/page/8/" class="page-link" aria-label="Last"><span aria-hidden="true">&raquo;&raquo;</span></a>
+  </li>
+</ul>
+
+
+  </article>
+
+    </main>
+    <footer class="bg-black bottom-0 w-100 pa3" role="contentinfo">
+  <div class="flex justify-between">
+  <a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href="http://example.org/" >
+    &copy;  My New Hugo Site 2021 
+  </a>
+    <div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+  </div>
+</footer>
+
+  </body>
+</html>
