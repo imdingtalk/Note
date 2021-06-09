@@ -1,0 +1,152 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>基于snmp的网络设备的监控.md | snoopy</title><meta name=viewport content="width=device-width,minimum-scale=1"><meta name=description content="介绍 公司当前环境下有基于prometheus的监控体系，覆盖了所有的服务器和虚拟机，但是还没有包含网络设备，例如交换机或者防火墙，因此，需要补充网络设备监控部分
+相关信息 prometheus： 监控系统，负责指标的收取和一些告警规则的定义snmp-exporter: 用于通过snmp协议暴露交换机的相关指标SNMP Exporter Config Generator： 此配置生成器使用NetSNMP解析MIB，并使用它们为snmp_exporter生成配置&ndash;帮助生成snmp的配置文件MIB和OID： MIB是管理信息库的缩写，它是用于管理通信网络中的实体的数据库。数据库是分层的（树形结构），并且每个条目都通过对象标识符（OID）进行寻址snmp协议： SNMP 是专门设计用于在 IP 网络管理网络节点（服务器、工作站、路由器、交换机及HUBS等）的一种标准协议
+部署 网络设备使能snmp agent system-view [Sysname] snmp-agent sys-info version v3 v2c //为了安全，最好只设置只读 [Sysname] snmp-agent community read xxxx ## 测试 yum -y install net-snmp-utils snmpwalk -v 2c（snmp的版本） -c xxxx(前面snmp-agent设置的密码) 10.10.1.1（交换机管理ip） .1.3.6.1.2.1.25.2.2（mib信息，需要查对应的厂家的mib信息库） #取得系统总内存  #如果能获取到返回信息，则snmp已经可以正常工作 使用snmp-exporter抓取snmp-agent的信息 snmp-exporter：https://github.com/prometheus/snmp_exporter使用snmp-exporter的关键是配置snmp-exporter的配置文件，默认有一个配置文件，但是里面涉及的信息基本都是国外交换机的配置，不能直接使用
+snmp.yml 典型的一个配置如下（部分）
+# WARNING: This file was auto-generated using snmp_exporter generator, manual changes will be lost. apcups: walk: - 1.3.6.1.2.1.2 - 1."><meta name=generator content="Hugo 0.83.1"><meta name=ROBOTS content="NOINDEX, NOFOLLOW"><link rel=stylesheet href=/dingtalk.pub/ananke/dist/main.css_5c99d70a7725bacd4c701e995b969fea.css><meta property="og:title" content="基于snmp的网络设备的监控.md"><meta property="og:description" content="介绍 公司当前环境下有基于prometheus的监控体系，覆盖了所有的服务器和虚拟机，但是还没有包含网络设备，例如交换机或者防火墙，因此，需要补充网络设备监控部分
+相关信息 prometheus： 监控系统，负责指标的收取和一些告警规则的定义snmp-exporter: 用于通过snmp协议暴露交换机的相关指标SNMP Exporter Config Generator： 此配置生成器使用NetSNMP解析MIB，并使用它们为snmp_exporter生成配置&ndash;帮助生成snmp的配置文件MIB和OID： MIB是管理信息库的缩写，它是用于管理通信网络中的实体的数据库。数据库是分层的（树形结构），并且每个条目都通过对象标识符（OID）进行寻址snmp协议： SNMP 是专门设计用于在 IP 网络管理网络节点（服务器、工作站、路由器、交换机及HUBS等）的一种标准协议
+部署 网络设备使能snmp agent system-view [Sysname] snmp-agent sys-info version v3 v2c //为了安全，最好只设置只读 [Sysname] snmp-agent community read xxxx ## 测试 yum -y install net-snmp-utils snmpwalk -v 2c（snmp的版本） -c xxxx(前面snmp-agent设置的密码) 10.10.1.1（交换机管理ip） .1.3.6.1.2.1.25.2.2（mib信息，需要查对应的厂家的mib信息库） #取得系统总内存  #如果能获取到返回信息，则snmp已经可以正常工作 使用snmp-exporter抓取snmp-agent的信息 snmp-exporter：https://github.com/prometheus/snmp_exporter使用snmp-exporter的关键是配置snmp-exporter的配置文件，默认有一个配置文件，但是里面涉及的信息基本都是国外交换机的配置，不能直接使用
+snmp.yml 典型的一个配置如下（部分）
+# WARNING: This file was auto-generated using snmp_exporter generator, manual changes will be lost. apcups: walk: - 1.3.6.1.2.1.2 - 1."><meta property="og:type" content="article"><meta property="og:url" content="dingtalk.pub/post/3505113/"><meta property="article:section" content="post"><meta property="article:published_time" content="2020-01-04T08:07:43+00:00"><meta property="article:modified_time" content="2020-01-04T08:07:43+00:00"><meta itemprop=name content="基于snmp的网络设备的监控.md"><meta itemprop=description content="介绍 公司当前环境下有基于prometheus的监控体系，覆盖了所有的服务器和虚拟机，但是还没有包含网络设备，例如交换机或者防火墙，因此，需要补充网络设备监控部分
+相关信息 prometheus： 监控系统，负责指标的收取和一些告警规则的定义snmp-exporter: 用于通过snmp协议暴露交换机的相关指标SNMP Exporter Config Generator： 此配置生成器使用NetSNMP解析MIB，并使用它们为snmp_exporter生成配置&ndash;帮助生成snmp的配置文件MIB和OID： MIB是管理信息库的缩写，它是用于管理通信网络中的实体的数据库。数据库是分层的（树形结构），并且每个条目都通过对象标识符（OID）进行寻址snmp协议： SNMP 是专门设计用于在 IP 网络管理网络节点（服务器、工作站、路由器、交换机及HUBS等）的一种标准协议
+部署 网络设备使能snmp agent system-view [Sysname] snmp-agent sys-info version v3 v2c //为了安全，最好只设置只读 [Sysname] snmp-agent community read xxxx ## 测试 yum -y install net-snmp-utils snmpwalk -v 2c（snmp的版本） -c xxxx(前面snmp-agent设置的密码) 10.10.1.1（交换机管理ip） .1.3.6.1.2.1.25.2.2（mib信息，需要查对应的厂家的mib信息库） #取得系统总内存  #如果能获取到返回信息，则snmp已经可以正常工作 使用snmp-exporter抓取snmp-agent的信息 snmp-exporter：https://github.com/prometheus/snmp_exporter使用snmp-exporter的关键是配置snmp-exporter的配置文件，默认有一个配置文件，但是里面涉及的信息基本都是国外交换机的配置，不能直接使用
+snmp.yml 典型的一个配置如下（部分）
+# WARNING: This file was auto-generated using snmp_exporter generator, manual changes will be lost. apcups: walk: - 1.3.6.1.2.1.2 - 1."><meta itemprop=datePublished content="2020-01-04T08:07:43+00:00"><meta itemprop=dateModified content="2020-01-04T08:07:43+00:00"><meta itemprop=wordCount content="521"><meta itemprop=keywords content><meta name=twitter:card content="summary"><meta name=twitter:title content="基于snmp的网络设备的监控.md"><meta name=twitter:description content="介绍 公司当前环境下有基于prometheus的监控体系，覆盖了所有的服务器和虚拟机，但是还没有包含网络设备，例如交换机或者防火墙，因此，需要补充网络设备监控部分
+相关信息 prometheus： 监控系统，负责指标的收取和一些告警规则的定义snmp-exporter: 用于通过snmp协议暴露交换机的相关指标SNMP Exporter Config Generator： 此配置生成器使用NetSNMP解析MIB，并使用它们为snmp_exporter生成配置&ndash;帮助生成snmp的配置文件MIB和OID： MIB是管理信息库的缩写，它是用于管理通信网络中的实体的数据库。数据库是分层的（树形结构），并且每个条目都通过对象标识符（OID）进行寻址snmp协议： SNMP 是专门设计用于在 IP 网络管理网络节点（服务器、工作站、路由器、交换机及HUBS等）的一种标准协议
+部署 网络设备使能snmp agent system-view [Sysname] snmp-agent sys-info version v3 v2c //为了安全，最好只设置只读 [Sysname] snmp-agent community read xxxx ## 测试 yum -y install net-snmp-utils snmpwalk -v 2c（snmp的版本） -c xxxx(前面snmp-agent设置的密码) 10.10.1.1（交换机管理ip） .1.3.6.1.2.1.25.2.2（mib信息，需要查对应的厂家的mib信息库） #取得系统总内存  #如果能获取到返回信息，则snmp已经可以正常工作 使用snmp-exporter抓取snmp-agent的信息 snmp-exporter：https://github.com/prometheus/snmp_exporter使用snmp-exporter的关键是配置snmp-exporter的配置文件，默认有一个配置文件，但是里面涉及的信息基本都是国外交换机的配置，不能直接使用
+snmp.yml 典型的一个配置如下（部分）
+# WARNING: This file was auto-generated using snmp_exporter generator, manual changes will be lost. apcups: walk: - 1.3.6.1.2.1.2 - 1."></head><body class="ma0 avenir bg-near-white"><header><div class=bg-black><nav class="pv3 ph3 ph4-ns" role=navigation><div class="flex-l justify-between items-center center"><a href=dingtalk.pub/ class="f3 fw2 hover-white no-underline white-90 dib">snoopy</a><div class="flex-l items-center"></div></div></nav></div></header><main class=pb7 role=main><article class="flex-l flex-wrap justify-between mw8 center ph3"><header class="mt4 w-100"><aside class="instapaper_ignoref b helvetica tracked">POSTS</aside><div id=sharing class=mt3><a href="https://www.facebook.com/sharer.php?u=dingtalk.pub/dingtalk.pub/post/3505113/" class="facebook no-underline" aria-label="share on Facebook"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M28.765 50.32h6.744V33.998h4.499l.596-5.624h-5.095l.007-2.816c0-1.466.14-2.253 2.244-2.253h2.812V17.68h-4.5c-5.405.0-7.307 2.729-7.307 7.317v3.377h-3.369v5.625h3.369V50.32zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd"/></svg></a><a href="https://twitter.com/share?url=dingtalk.pub/dingtalk.pub/post/3505113/&text=%e5%9f%ba%e4%ba%8esnmp%e7%9a%84%e7%bd%91%e7%bb%9c%e8%ae%be%e5%a4%87%e7%9a%84%e7%9b%91%e6%8e%a7.md" class="twitter no-underline" aria-label="share on Twitter"><svg height="32" style="enable-background:new 0 0 67 67" viewBox="0 0 67 67" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M37.167 22.283c-2.619.953-4.274 3.411-4.086 6.101l.063 1.038-1.048-.127c-3.813-.487-7.145-2.139-9.974-4.915l-1.383-1.377-.356 1.017c-.754 2.267-.272 4.661 1.299 6.271.838.89.649 1.017-.796.487-.503-.169-.943-.296-.985-.233-.146.149.356 2.076.754 2.839.545 1.06 1.655 2.097 2.871 2.712l1.027.487-1.215.021c-1.173.0-1.215.021-1.089.467.419 1.377 2.074 2.839 3.918 3.475l1.299.444-1.131.678c-1.676.976-3.646 1.526-5.616 1.568C19.775 43.256 19 43.341 19 43.405c0 .211 2.557 1.397 4.044 1.864 4.463 1.377 9.765.783 13.746-1.568 2.829-1.673 5.657-5 6.978-8.221.713-1.716 1.425-4.851 1.425-6.354.0-.975.063-1.102 1.236-2.267.692-.678 1.341-1.419 1.467-1.631.21-.403.188-.403-.88-.043-1.781.636-2.033.551-1.152-.402.649-.678 1.425-1.907 1.425-2.267.0-.063-.314.042-.671.233-.377.212-1.215.53-1.844.72l-1.131.361-1.027-.7c-.566-.381-1.361-.805-1.781-.932C39.766 21.902 38.131 21.944 37.167 22.283zM33 64C16.432 64 3 50.569 3 34S16.432 4 33 4s30 13.431 30 30S49.568 64 33 64z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a><a href="https://www.linkedin.com/shareArticle?mini=true&url=dingtalk.pub/dingtalk.pub/post/3505113/&title=%e5%9f%ba%e4%ba%8esnmp%e7%9a%84%e7%bd%91%e7%bb%9c%e8%ae%be%e5%a4%87%e7%9a%84%e7%9b%91%e6%8e%a7.md" class="linkedin no-underline" aria-label="share on LinkedIn"><svg height="32" style="enable-background:new 0 0 65 65" viewBox="0 0 65 65" width="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M50.837 48.137V36.425c0-6.275-3.35-9.195-7.816-9.195-3.604.0-5.219 1.983-6.119 3.374V27.71h-6.79c.09 1.917.0 20.427.0 20.427h6.79V36.729c0-.609.044-1.219.224-1.655.49-1.22 1.607-2.483 3.482-2.483 2.458.0 3.44 1.873 3.44 4.618v10.929H50.837zM22.959 24.922c2.367.0 3.842-1.57 3.842-3.531-.044-2.003-1.475-3.528-3.797-3.528s-3.841 1.524-3.841 3.528c0 1.961 1.474 3.531 3.753 3.531H22.959zM34 64C17.432 64 4 50.568 4 34 4 17.431 17.432 4 34 4s30 13.431 30 30c0 16.568-13.432 30-30 30zM26.354 48.137V27.71h-6.789v20.427h6.789z" style="fill-rule:evenodd;clip-rule:evenodd;fill:"/></svg></a></div><h1 class="f1 athelas mt3 mb1">基于snmp的网络设备的监控.md</h1><time class="f6 mv4 dib tracked" datetime=2020-01-04T08:07:43Z>January 4, 2020</time></header><div class="nested-copy-line-height lh-copy serif f4 nested-links nested-img mid-gray pr4-l w-two-thirds-l"><p></p><h2 id=介绍>介绍</h2><p>公司当前环境下有基于prometheus的监控体系，覆盖了所有的服务器和虚拟机，但是还没有包含网络设备，例如交换机或者防火墙，因此，需要补充网络设备监控部分</p><p></p><h2 id=相关信息>相关信息</h2><p>prometheus： 监控系统，负责指标的收取和一些告警规则的定义snmp-exporter: 用于通过snmp协议暴露交换机的相关指标SNMP Exporter Config Generator： 此配置生成器使用NetSNMP解析MIB，并使用它们为snmp_exporter生成配置&ndash;帮助生成snmp的配置文件MIB和OID： MIB是管理信息库的缩写，它是用于管理通信网络中的实体的数据库。数据库是分层的（树形结构），并且每个条目都通过对象标识符（OID）进行寻址snmp协议： SNMP 是专门设计用于在 IP 网络管理网络节点（服务器、工作站、路由器、交换机及HUBS等）的一种标准协议</p><p></p><h2 id=部署>部署</h2><p></p><h3 id=网络设备使能snmp-agent>网络设备使能snmp agent</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>system-view
+<span style=color:#f92672>[</span>Sysname<span style=color:#f92672>]</span> snmp-agent sys-info version v3 v2c
+//为了安全，最好只设置只读
+<span style=color:#f92672>[</span>Sysname<span style=color:#f92672>]</span> snmp-agent community read xxxx
+<span style=color:#75715e>## 测试</span>
+yum -y install net-snmp-utils  
+snmpwalk -v 2c（snmp的版本） -c xxxx<span style=color:#f92672>(</span>前面snmp-agent设置的密码<span style=color:#f92672>)</span> 10.10.1.1（交换机管理ip） .1.3.6.1.2.1.25.2.2（mib信息，需要查对应的厂家的mib信息库）  <span style=color:#75715e>#取得系统总内存  </span>
+<span style=color:#75715e>#如果能获取到返回信息，则snmp已经可以正常工作</span>
+</code></pre></div><p></p><h3 id=使用snmp-exporter抓取snmp-agent的信息>使用snmp-exporter抓取snmp-agent的信息</h3><p>snmp-exporter：<a href=https://github.com/prometheus/snmp_exporter>https://github.com/prometheus/snmp_exporter</a>使用snmp-exporter的关键是配置snmp-exporter的配置文件，默认有一个配置文件，但是里面涉及的信息基本都是国外交换机的配置，不能直接使用</p><p></p><h4 id=snmpyml>snmp.yml</h4><p>典型的一个配置如下（部分）</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># WARNING: This file was auto-generated using snmp_exporter generator, manual changes will be lost.</span>
+<span style=color:#f92672>apcups</span>:
+  <span style=color:#f92672>walk</span>:
+  - <span style=color:#ae81ff>1.3.6.1.2.1.2</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.12</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.2</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.3</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.4</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.7.2</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.10.2.3.2</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.26.8.3</span>
+  <span style=color:#f92672>get</span>:
+  - <span style=color:#ae81ff>1.3.6.1.2.1.1.3.0</span>
+  - <span style=color:#ae81ff>1.3.6.1.4.1.318.1.1.1.8.1.0</span>
+  <span style=color:#f92672>metrics</span>:
+  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>sysUpTime</span>
+    <span style=color:#f92672>oid</span>: <span style=color:#ae81ff>1.3.6.1.2.1.1.3</span>
+    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>gauge</span>
+    <span style=color:#f92672>help</span>: <span style=color:#ae81ff>The time (in hundredths of a second) since the network management portion</span>
+      <span style=color:#ae81ff>of the system was last re-initialized. - 1.3.6.1.2.1.1.3</span>
+  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>ifNumber</span>
+    <span style=color:#f92672>oid</span>: <span style=color:#ae81ff>1.3.6.1.2.1.2.1</span>
+    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>gauge</span>
+    <span style=color:#f92672>help</span>: <span style=color:#ae81ff>The number of network interfaces (regardless of their current state) present</span>
+      <span style=color:#66d9ef>on</span> <span style=color:#ae81ff>this system. - 1.3.6.1.2.1.2.1</span>
+  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>ifIndex</span>
+    <span style=color:#f92672>oid</span>: <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.1</span>
+    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>gauge</span>
+    <span style=color:#f92672>help</span>: <span style=color:#ae81ff>A unique value, greater than zero, for each interface - 1.3.6.1.2.1.2.2.1.1</span>
+    <span style=color:#f92672>indexes</span>:
+    - <span style=color:#f92672>labelname</span>: <span style=color:#ae81ff>ifIndex</span>
+      <span style=color:#f92672>type</span>: <span style=color:#ae81ff>gauge</span>
+      <span style=color:#ae81ff>........</span>
+      <span style=color:#ae81ff>........</span>
+      <span style=color:#ae81ff>........</span>
+      <span style=color:#75715e>#默认的完整配置高达17000行~</span>
+</code></pre></div><p>这样的配置文件，显然不是我们需要手动配置的，因为文件的第一行已经声明了，这个配置文件是用工具生成的；如果不用工具，我们需要从mib中找到对应的oid信息在这里配置。。。太难了，还有没有更简单的方法？</p><p></p><h4 id=snmp-exporter-generator>snmp-exporter generator</h4><p>Prometheus team特此准备了snmp-exporter generator一个专门用于生成snmp-exporter的工具Generator: <a href=https://github.com/prometheus/snmp_exporter/tree/master/generator>Generator</a></p><pre><code>安装
+ sudo yum install gcc gcc-g++ make net-snmp net-snmp-utils net-snmp-libs net-snmp-devel # RHEL-based distros
+go get github.com/prometheus/snmp_exporter/generator
+cd ${GOPATH-$HOME/go}/src/github.com/prometheus/snmp_exporter/generator
+go build
+make mibs
+使用
+export MIBDIRS=mibs
+./generator generate
+它会根据generator.yml的配置来生成配置文件，generator.yml的配置就简单多了
+</code></pre><p></p><h5 id=generatoryml>generator.yml</h5><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>modules</span>:
+  <span style=color:#f92672>huawei</span>:
+    <span style=color:#f92672>walk</span>:
+      - <span style=color:#ae81ff>hwDev</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.1.3</span>   <span style=color:#75715e>#sysUpTime</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.10</span> <span style=color:#75715e>#ifHCOutOctets</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.14</span> <span style=color:#75715e>#ifInErrors</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.20</span> <span style=color:#75715e>#ifOutErrors</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.6</span> <span style=color:#75715e>#ifHCInOctets</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.21</span> <span style=color:#75715e>#ifOutQLen</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.13</span> <span style=color:#75715e>#ifInDiscards</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.19</span> <span style=color:#75715e>#ifOutDiscards</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.7</span> <span style=color:#75715e>#ifAdminStatus</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.8</span> <span style=color:#75715e>#ifOperStatus</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.2</span> <span style=color:#75715e>#ifDescr</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.1</span> <span style=color:#75715e>#ifName</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.5</span> <span style=color:#75715e>#ifSpeed</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.15</span> <span style=color:#75715e>#ifHighSpeed</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.18</span> <span style=color:#75715e>#ifAlias</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.2.2.1.3</span> <span style=color:#75715e>#ifType</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.11</span> <span style=color:#75715e>#ifHCOutUcastPkts</span>
+      - <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.7</span> <span style=color:#75715e>#ifHCInUcastPkts</span>
+    <span style=color:#75715e>##定义数据中需要的额外的labels</span>
+    <span style=color:#f92672>lookups</span>:
+      - <span style=color:#f92672>source_indexes</span>: [<span style=color:#ae81ff>ifIndex]</span>
+        <span style=color:#f92672>lookup</span>: <span style=color:#ae81ff>ifAlias</span>
+      - <span style=color:#f92672>source_indexes</span>: [<span style=color:#ae81ff>ifIndex]</span>
+        <span style=color:#f92672>lookup</span>: <span style=color:#ae81ff>ifDescr</span>
+      - <span style=color:#f92672>source_indexes</span>: [<span style=color:#ae81ff>ifIndex]</span>
+        <span style=color:#75715e># Use OID to avoid conflict with Netscaler NS-ROOT-MIB.</span>
+        <span style=color:#f92672>lookup</span>: <span style=color:#ae81ff>1.3.6.1.2.1.31.1.1.1.1</span> <span style=color:#75715e># ifName</span>
+    <span style=color:#f92672>overrides</span>:
+      <span style=color:#f92672>ifAlias</span>:
+        <span style=color:#f92672>ignore</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># Lookup metric</span>
+      <span style=color:#f92672>ifDescr</span>:
+        <span style=color:#f92672>ignore</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># Lookup metric</span>
+      <span style=color:#f92672>ifName</span>:
+        <span style=color:#f92672>ignore</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># Lookup metric</span>
+      <span style=color:#f92672>ifType</span>:
+        <span style=color:#f92672>type</span>: <span style=color:#ae81ff>EnumAsInfo</span>
+    <span style=color:#f92672>version</span>: <span style=color:#ae81ff>2</span>
+    <span style=color:#f92672>auth</span>:
+      <span style=color:#f92672>community</span>: <span style=color:#ae81ff>xxxx(snmp-agent设置的密码)</span>
+</code></pre></div><p>这里的oid信息就可以根据具体的厂商去查找了，例如华为： <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1000178142/948603b1>https://support.huawei.com/enterprise/zh/doc/EDOC1000178142/948603b1</a>填写在配置文件的walk区域定义lookups和overrides给抓取的数据添加一些我们需要的labels定义auth和version信息，这个是是我们交换机前面已经设置好的这里只定义了我们需要walk的oid信息，但是实体信息是在mib里面的，比如</p><pre><code>hwDev 来自 HUAWEI-MIB;
+hwFrameIndex, hwSlotIndex 来自 HUAWEI-DEVICE-MIB;
+OBJECT-GROUP, MODULE-COMPLIANCE 来自 SNMPv2-CONF;
+Gauge, OBJECT-TYPE, MODULE-IDENTITY 来自 SNMPv2-SMI.
+等等
+</code></pre><p>那么mib在哪里有呢，这里提供了大量的mib库，<a href=https://github.com/librenms/librenms/blob/master/mibs>https://github.com/librenms/librenms/blob/master/mibs</a>在生成配置文件的时候，会尝试读取本地的mib库，$HOME/.snmp/mibs，因此我们把所需要的mib信息放在此处： $HOME/.snmp/mibs</p><pre><code>[root@opsmanager ~]# ll $HOME/.snmp/mibs
+total 636
+-rw-r--r-- 1 root root   7440 Nov 13 10:14 HUAWEI-CPU-MIB
+-rw-r--r-- 1 root root 351413 Nov 13 10:14 HUAWEI-DEVICE-MIB
+-rw-r--r-- 1 root root   9967 Nov 13 10:12 HUAWEI-MEMORY-MIB
+-rw-r--r-- 1 root root 146824 Nov 13 10:12 HUAWEI-MIB
+-rw-r--r-- 1 root root  71691 Nov 13 21:58 IF-MIB
+-rw-r--r-- 1 root root   8263 Nov 13 10:16 SNMPv2-CONF
+-rw-r--r-- 1 root root  29305 Nov 13 10:16 SNMPv2-MIB
+-rw-r--r-- 1 root root   8924 Nov 13 10:16 SNMPv2-SMI
+</code></pre><p>配置文件准备完毕，直接生成配置文件</p><pre><code>[root@opsmanager snmp_exporter]# ./generator generate
+INFO[0000] Loading MIBs from $HOME/.snmp/mibs:/usr/share/snmp/mibs  source=&quot;net_snmp.go:141&quot;
+WARN[0000] NetSNMP reported 7 parse errors               source=&quot;main.go:103&quot;
+INFO[0000] Generating config for module huawei           source=&quot;main.go:49&quot;
+INFO[0000] Generated 310 metrics for module huawei       source=&quot;main.go:60&quot;
+INFO[0000] Config written to /opt/snmp_exporter/snmp.yml  source=&quot;main.go:85&quot;
+</code></pre><p>我们可以直接使用生成的配置文件启动，snmp-exporter<code>nohup snmp-exporter &</code></p><p>验证页面<a href=http://xx.xx.xx.xx:9116>http://xx.xx.xx.xx:9116</a>输入generator配置里面的模块名称和想要抓取的目标网络设备的ip，即可查看抓取的所有指标</p><p></p><h3 id=将指标接入prometheus>将指标接入prometheus</h3><p>直接使用默认配置即可</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>scrape_configs</span>:
+  - <span style=color:#f92672>job_name</span>: <span style=color:#e6db74>&#39;snmp&#39;</span>
+    <span style=color:#f92672>static_configs</span>:
+      - <span style=color:#f92672>targets</span>:
+        - <span style=color:#ae81ff>192.168.1.2</span>  <span style=color:#75715e># SNMP device.</span>
+        - <span style=color:#ae81ff>xx.xx.xx.xx</span>
+        - <span style=color:#ae81ff>.....</span>
+    <span style=color:#f92672>metrics_path</span>: <span style=color:#ae81ff>/snmp</span>
+    <span style=color:#f92672>params</span>:
+      <span style=color:#f92672>module</span>: [<span style=color:#ae81ff>if_mib]</span>
+    <span style=color:#f92672>relabel_configs</span>:
+      - <span style=color:#f92672>source_labels</span>: [<span style=color:#ae81ff>__address__]</span>
+        <span style=color:#f92672>target_label</span>: <span style=color:#ae81ff>__param_target</span>
+      - <span style=color:#f92672>source_labels</span>: [<span style=color:#ae81ff>__param_target]</span>
+        <span style=color:#f92672>target_label</span>: <span style=color:#ae81ff>instance</span>
+      - <span style=color:#f92672>target_label</span>: <span style=color:#ae81ff>__address__</span>
+        <span style=color:#f92672>replacement</span>: <span style=color:#ae81ff>xx.xx.xx.xx:9116 </span> <span style=color:#75715e># The SNMP exporter&#39;s real hostname:port.</span>
+</code></pre></div><p>重新加载prometheus的配置<code>curl -X POST http://xx.xxx.xx.xx:9090/-/reload</code></p><p>接下来就是基于这些指标的绘图和告警设置了</p><p></p><h2 id=参考>参考 </h2><p><a href=http://devopstarter.info/snmp-exporter-generator-tutorial/>http://devopstarter.info/snmp-exporter-generator-tutorial/</a>   <a href=https://github.com/prometheus/snmp_exporter>https://github.com/prometheus/snmp_exporter</a>   <a href=https://github.com/prometheus/snmp_exporter/tree/master/generator>https://github.com/prometheus/snmp_exporter/tree/master/generator</a>  <a href=https://github.com/librenms/librenms/tree/master/mibs>https://github.com/librenms/librenms/tree/master/mibs</a>  <a href=https://www.cnblogs.com/guoxiangyue/p/11778217.html>https://www.cnblogs.com/guoxiangyue/p/11778217.html</a>  <a href=https://www.cnblogs.com/--smile/p/11086770.html>https://www.cnblogs.com/&ndash;smile/p/11086770.html</a>  <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1000141473/40dfdfef>https://support.huawei.com/enterprise/zh/doc/EDOC1000141473/40dfdfef</a>  <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1000178142/948603b1>https://support.huawei.com/enterprise/zh/doc/EDOC1000178142/948603b1</a>  </p><ul class=pa0></ul><div class="mt6 instapaper_ignoref"></div></div><aside class="w-30-l mt6-l"></aside></article></main><footer class="bg-black bottom-0 w-100 pa3" role=contentinfo><div class="flex justify-between"><a class="f4 fw4 hover-white no-underline white-70 dn dib-ns pv2 ph3" href=dingtalk.pub>&copy; snoopy 2021</a><div></div></div></footer></body></html>
