@@ -3,8 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: 'imdingtalk',
+  tagline: 'welcome to here',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -60,7 +60,7 @@ const config: Config = {
     navbar: {
       title: '彪',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'Logo',
         src: 'img/logo.svg',
       },
       items: [
@@ -68,7 +68,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'note',
+          label: 'Note',
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
@@ -121,7 +121,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} imdingtalk, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
