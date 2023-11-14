@@ -89,7 +89,7 @@ sysbench   --mysql-host={IP}  --mysql-port={port} --mysql-user={root} --mysql-pa
 | 读写 | 150 | 212.57 | 4251.36  | 1327.91 |
 
 资源使用情况：
-![image.png](https://raw.githubusercontent.com/imdingtalk/img/images/202311081205716.png?token=AEAAM6MA46F2V3HFJU5U7RLFJMEUE)
+![image.png](https://raw.githubusercontent.com/imdingtalk/img/images/202311081205716.png)
 
 ## 数据说明
 TPS和QPS是对系统性能的度量，值越高表示系统处理能力越强。95th percentile的响应时间表示在所有请求中，有95%的请求的响应时间低于该值，该值越小表示系统响应速度越快。根据数据记录结果，可以看出随着并发数的增加，系统的吞吐量下降，而响应时间则增加。
@@ -118,7 +118,7 @@ bash-4.2# kill 1
 ![image.png](https://raw.githubusercontent.com/imdingtalk/img/images/202311081204750.png)
 
 集群状态可以自愈
-![image.png](https://raw.githubusercontent.com/imdingtalk/img/images/202311081205935.png?token=AEAAM6KTZ6DTXCXGTNLBGE3FJMEUU)
+![image.png](https://raw.githubusercontent.com/imdingtalk/img/images/202311081205935.png)
 
 集群本身有自愈能力，在遇到一些意外情况的时候可以自愈；但是意外情况会使得客户端的连接端开，客户端应该做好重连或者重试机制
 
