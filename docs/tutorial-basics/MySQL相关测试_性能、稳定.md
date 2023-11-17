@@ -39,7 +39,7 @@ sysbench oltp_read_only --tables=20 --table_size=50000  --mysql-host=172.42.206.
 - --table_size 每个条10万条数据，
 - --mysql-host 所连接 MySQL集群的IP:172.42.135.221
 - --mysql-port 所连接MySQL集群的端口号
-- --mysql-user MySQL集群用户名
+- --mysql-user MySQL集群用户名 
 - --mysql-password MySQL集群密码
 - --mysql-db 测试的db （这里写的test_database ，需要先登录到MySQL，通过 create database test_database 提前创建）
 3. 测试执行
