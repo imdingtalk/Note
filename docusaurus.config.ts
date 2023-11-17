@@ -38,14 +38,14 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/${organizationName}/${projectName}/tree/main/",
+            'https://github.com/imdingtalk/Note/tree/main/',
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/${organizationName}/${projectName}/tree/main/",
+            'https://github.com/imdingtalk/Note/tree/main/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -58,7 +58,7 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: '彪',
+      title: 'Sweet Dreams Discovery',
       logo: {
         alt: 'Logo',
         src: 'img/logo.svg',
@@ -72,7 +72,7 @@ const config: Config = {
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: "https://github.com/${organizationName}/${projectName}",
+          href: "https://github.com/imdingtalk/Note/",
           label: 'GitHub',
           position: 'right',
         },
